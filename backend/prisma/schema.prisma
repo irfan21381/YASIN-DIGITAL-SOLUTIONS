@@ -1,0 +1,296 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/* -----------------------------------
+   ENUMS
+----------------------------------- */
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  MANAGER
+  TEACHER
+  STUDENT
+  PUBLIC_STUDENT
+  EMPLOYEE
+}
+
+/* -----------------------------------
+   USER MODEL
+----------------------------------- */
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String?
+  name      String?
+  phone     String?
+  role      Role     @default(STUDENT)
+  isVerified Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  student   Student?
+  teacher   Teacher?
+  manager   Manager?
+
+  aiMessages AIChatMessage[]
+  internshipsPosted Internship[] @relation("PostedBy")
+  payments   Payment[]
+  logs       ActivityLog[]
+}
+
+/* -----------------------------------
+   STUDENT MODEL
+----------------------------------- */
+model Student {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int      @unique
+
+  studentNumber String? @unique
+  year      Int?
+  branch    String?
+
+  college   College? @relation(fields: [collegeId], references: [id])
+  collegeId Int?
+
+  enrolledSubjects Subject[] @relation("StudentSubjects")
+
+  quizAttempts QuizAttempt[]
+  applications InternshipApplication[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/* -----------------------------------
+   TEACHER MODEL
+----------------------------------- */
+model Teacher {
+  id        Int @id @default(autoincrement())
+  user      User @relation(fields: [userId], references: [id])
+  userId    Int @unique
+
+  department String?
+  college    College? @relation(fields: [collegeId], references: [id])
+  collegeId  Int?
+
+  materials Material[]
+  quizzes   Quiz[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/* -----------------------------------
+   MANAGER MODEL
+----------------------------------- */
+model Manager {
+  id        Int @id @default(autoincrement())
+  user      User @relation(fields: [userId], references: [id])
+  userId    Int @unique
+
+  college   College? @relation(fields: [collegeId], references: [id])
+  collegeId Int?
+
+  createdAt DateTime @default(now())
+}
+
+/* -----------------------------------
+   COLLEGE MODEL
+----------------------------------- */
+model College {
+  id        Int @id @default(autoincrement())
+  name      String
+  code      String? @unique
+  address   String?
+  isActive  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  students  Student[]
+  teachers  Teacher[]
+  managers  Manager[]
+  subjects  Subject[]
+  materials Material[]
+}
+
+/* -----------------------------------
+   SUBJECT MODEL
+----------------------------------- */
+model Subject {
+  id          Int @id @default(autoincrement())
+  title       String
+  code        String? @unique
+  description String?
+
+  college   College? @relation(fields: [collegeId], references: [id])
+  collegeId Int?
+
+  materials Material[]
+  quizzes   Quiz[]
+
+  students  Student[] @relation("StudentSubjects")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/* -----------------------------------
+   MATERIAL MODEL (FINAL SINGLE VERSION)
+----------------------------------- */
+model Material {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  fileUrl     String
+  fileType    String?
+
+  uploadedBy  Teacher? @relation(fields: [teacherId], references: [id])
+  teacherId   Int?
+
+  college     College? @relation(fields: [collegeId], references: [id])
+  collegeId   Int?
+
+  subject     Subject? @relation(fields: [subjectId], references: [id])
+  subjectId   Int?
+
+  approved    Boolean  @default(false)
+  approvedBy  Int?
+  metadata    Json?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+/* -----------------------------------
+   QUIZ MODEL
+----------------------------------- */
+model Quiz {
+  id          Int @id @default(autoincrement())
+  title       String
+  description String?
+
+  subject   Subject? @relation(fields: [subjectId], references: [id])
+  subjectId Int?
+
+  teacher   Teacher? @relation(fields: [teacherId], references: [id])
+  teacherId Int?
+
+  questions Json
+  totalMarks Int?
+
+  attempts  QuizAttempt[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/* -----------------------------------
+   QUIZ ATTEMPTS
+----------------------------------- */
+model QuizAttempt {
+  id         Int @id @default(autoincrement())
+  quiz       Quiz @relation(fields: [quizId], references: [id])
+  quizId     Int
+
+  student    Student @relation(fields: [studentId], references: [id])
+  studentId  Int
+
+  answers    Json
+  score      Float?
+  submittedAt DateTime @default(now())
+}
+
+/* -----------------------------------
+   INTERNSHIP MODEL
+----------------------------------- */
+model Internship {
+  id        Int @id @default(autoincrement())
+  title     String
+  company   String?
+  description String?
+  location  String?
+  stipend   String?
+
+  postedBy   User? @relation("PostedBy", fields: [postedById], references: [id])
+  postedById Int?
+
+  applications InternshipApplication[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/* -----------------------------------
+   INTERNSHIP APPLICATIONS
+----------------------------------- */
+model InternshipApplication {
+  id           Int @id @default(autoincrement())
+  internship   Internship @relation(fields: [internshipId], references: [id])
+  internshipId Int
+
+  student      Student @relation(fields: [studentId], references: [id])
+  studentId    Int
+
+  resumeUrl    String?
+  coverLetter  String?
+  status       String @default("PENDING")
+
+  appliedAt DateTime @default(now())
+}
+
+/* -----------------------------------
+   PAYMENTS
+----------------------------------- */
+model Payment {
+  id         Int @id @default(autoincrement())
+  user       User @relation(fields: [userId], references: [id])
+  userId     Int
+
+  amount     Float
+  currency   String @default("INR")
+  provider   String?
+  providerId String?
+  status     String @default("PENDING")
+  metadata   Json?
+
+  createdAt DateTime @default(now())
+}
+
+/* -----------------------------------
+   AI CHAT
+----------------------------------- */
+model AIChatMessage {
+  id        Int @id @default(autoincrement())
+  user      User? @relation(fields: [userId], references: [id])
+  userId    Int?
+
+  role      String
+  content   String
+  metadata  Json?
+  embedding Json?
+
+  createdAt DateTime @default(now())
+}
+
+/* -----------------------------------
+   ACTIVITY LOGS
+----------------------------------- */
+model ActivityLog {
+  id         Int @id @default(autoincrement())
+  user       User? @relation(fields: [userId], references: [id])
+  userId     Int?
+
+  action     String
+  resource   String?
+  resourceId Int?
+  meta       Json?
+
+  createdAt DateTime @default(now())
+}

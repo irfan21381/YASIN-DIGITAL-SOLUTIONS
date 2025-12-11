@@ -1,154 +1,250 @@
-# Troubleshooting Guide
+# 🔧 YDS EduAI - Troubleshooting Guide
 
-## "Cannot reach server" Error
+## ✅ Quick Fixes for Common Issues
 
-This error occurs when the frontend cannot connect to the backend. Follow these steps:
+### Issue 1: Frontend Can't Connect to Backend
 
-### 1. Check Backend is Running
+**Symptoms:**
+- "Network Error" in browser
+- API calls failing
+- 404 errors
 
-**Terminal 1 - Start Backend:**
-```bash
-cd backend
-npm start
-```
+**Fix:**
+1. Check backend is running:
+   ```bash
+   # Check if port 5000 is in use
+   netstat -ano | findstr :5000
+   ```
 
-You should see:
-```
-Mongo connected
-Server running on http://0.0.0.0:5000
-```
+2. Verify `frontend/.env.local`:
+   ```env
+   NEXT_PUBLIC_API_URL=http://localhost:5000/api
+   ```
 
-### 2. Check Environment Variables
-
-**Frontend `.env` file (in root directory):**
-```env
-VITE_API_URL=http://localhost:5000/api
-```
-
-**Backend `.env` file (in `backend/` directory):**
-```env
-PORT=5000
-MONGO_URI=mongodb://localhost:27017/yds
-JWT_SECRET=supersecret
-JWT_EXPIRES_IN=7d
-FRONTEND_ORIGIN=http://localhost:8080
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=465
-EMAIL_USER=your@gmail.com
-EMAIL_PASS=your-app-password
-```
-
-### 3. Verify MongoDB is Running
-
-**Check MongoDB:**
-```bash
-# Windows (if installed as service, it should be running)
-# Or start manually:
-mongod
-
-# Or use MongoDB Atlas connection string in MONGO_URI
-```
-
-### 4. Test Backend Connection
-
-Open browser and go to:
-```
-http://localhost:5000/api/health
-```
-
-Should return: `{"ok":true}`
-
-### 5. Check CORS Configuration
-
-Ensure `FRONTEND_ORIGIN` in backend `.env` matches your frontend URL:
-- Development: `http://localhost:8080`
-- Production: Your production URL
-
-### 6. Restart Both Servers
-
-1. Stop both frontend and backend (Ctrl+C)
-2. Start backend first: `cd backend && npm start`
-3. Start frontend: `npm run dev`
-
-## Forgot Password Not Working
-
-### Fixed Issues:
-✅ Created `/forgot-password` page
-✅ Added forgot password API functions
-✅ Linked "Forgot password?" in login page
-✅ Backend endpoint `/api/auth/reset-password` exists
-
-### How to Use:
-1. Click "Forgot password?" on login page
-2. Enter your email
-3. Click "Send OTP"
-4. Check your email for OTP
-5. Enter OTP and new password
-6. Click "Reset Password"
-
-### If OTP Not Received:
-1. Check spam folder
-2. Verify email configuration in backend `.env`:
-   - `EMAIL_USER` - Your Gmail address
-   - `EMAIL_PASS` - Gmail App Password (not regular password)
-3. For Gmail App Password:
-   - Go to: https://myaccount.google.com/apppasswords
-   - Generate app password
-   - Use it in `EMAIL_PASS`
-
-## Common Issues
-
-### Port Already in Use
-```bash
-# Windows - Find process using port 5000
-netstat -ano | findstr :5000
-
-# Kill process (replace PID)
-taskkill /PID <PID> /F
-```
-
-### MongoDB Connection Failed
-- Check MongoDB is running
-- Verify `MONGO_URI` is correct
-- For Atlas: Check IP whitelist includes your IP
-
-### CORS Errors
-- Verify `FRONTEND_ORIGIN` in backend `.env`
-- Check browser console for specific CORS error
-- Ensure frontend URL matches exactly (including port)
-
-### Network Timeout
-- Backend might be slow to start
-- Check backend logs for errors
-- Verify MongoDB connection
-
-## Quick Health Check
-
-Run these commands to verify setup:
-
-```bash
-# 1. Check backend health
-curl http://localhost:5000/api/health
-
-# 2. Check MongoDB connection
-# Open MongoDB Compass or mongosh
-mongosh mongodb://localhost:27017/yds
-
-# 3. Test login endpoint
-curl -X POST http://localhost:5000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"student1@yds.com","password":"student123"}'
-```
-
-## Still Having Issues?
-
-1. Check browser console (F12) for errors
-2. Check backend terminal for error logs
-3. Verify all environment variables are set
-4. Ensure both servers are running
-5. Try clearing browser cache and localStorage
+3. Restart frontend:
+   ```bash
+   cd frontend
+   npm run dev
+   ```
 
 ---
 
-**Last Updated:** After implementing forgot password and fixing API connection
+### Issue 2: OTP Not Working
+
+**Symptoms:**
+- OTP not received
+- Login fails
+
+**Fix:**
+1. In development mode, OTP is in API response
+2. Check browser Network tab → `/api/auth/send-otp` → Response
+3. Or check backend console output
+4. OTP is shown in response JSON: `{ "otp": "123456" }`
+
+---
+
+### Issue 3: MongoDB Connection Failed
+
+**Symptoms:**
+- Backend crashes on start
+- "MongoDB connection error"
+
+**Fix:**
+1. Check MongoDB service:
+   ```powershell
+   Get-Service MongoDB
+   ```
+
+2. If not running:
+   ```powershell
+   Start-Service MongoDB
+   ```
+
+3. Verify connection string in `backend/.env`:
+   ```env
+   MONGODB_URI=mongodb://localhost:27017/yds-eduai
+   ```
+
+4. Test connection:
+   ```bash
+   node backend/test-connection.js
+   ```
+
+---
+
+### Issue 4: Module Resolution Errors
+
+**Symptoms:**
+- "Cannot resolve '@/lib/api'"
+- Import errors
+
+**Fix:**
+1. Verify `frontend/tsconfig.json` has:
+   ```json
+   {
+     "compilerOptions": {
+       "baseUrl": ".",
+       "paths": {
+         "@/*": ["./*"]
+       }
+     }
+   }
+   ```
+
+2. Restart dev server (Ctrl+C, then `npm run dev`)
+
+---
+
+### Issue 5: Port Already in Use
+
+**Symptoms:**
+- "EADDRINUSE: address already in use"
+- Port 5000 or 3000 busy
+
+**Fix:**
+```powershell
+# Kill Node processes
+taskkill /F /IM node.exe
+
+# Or kill specific port
+netstat -ano | findstr :5000
+taskkill /PID <PID> /F
+```
+
+---
+
+### Issue 6: CORS Errors
+
+**Symptoms:**
+- "CORS policy" errors in browser
+- API calls blocked
+
+**Fix:**
+1. Check `backend/.env`:
+   ```env
+   FRONTEND_URL=http://localhost:3000
+   ```
+
+2. Verify `backend/server.js` CORS config:
+   ```javascript
+   app.use(cors({
+     origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+     credentials: true
+   }));
+   ```
+
+3. Restart backend
+
+---
+
+### Issue 7: Charts Not Displaying
+
+**Symptoms:**
+- Analytics pages blank
+- Chart.js errors
+
+**Fix:**
+1. Verify chart.js installed:
+   ```bash
+   cd frontend
+   npm list chart.js react-chartjs-2
+   ```
+
+2. If missing:
+   ```bash
+   npm install chart.js react-chartjs-2
+   ```
+
+3. Check Chart.js registration in page files
+
+---
+
+### Issue 8: File Upload Not Working
+
+**Symptoms:**
+- Upload fails
+- "File is required" error
+
+**Fix:**
+1. Check file size limit (100MB max)
+2. Verify file type is allowed (PDF, PPT, DOC, etc.)
+3. Check AWS S3 credentials in `backend/.env` (if using S3)
+4. For local testing, files are stored in memory
+
+---
+
+### Issue 9: AI Services Not Responding
+
+**Symptoms:**
+- "AI service unavailable"
+- Doubt solver fails
+
+**Fix:**
+1. Check API keys in `backend/.env`:
+   ```env
+   OPENAI_API_KEY=your-key
+   # OR
+   GROQ_API_KEY=your-key
+   AI_PROVIDER=groq
+   ```
+
+2. If no API key, AI will return error messages
+3. For testing, you can use mock responses
+
+---
+
+### Issue 10: Authentication Token Issues
+
+**Symptoms:**
+- "Invalid token"
+- Auto-logout
+
+**Fix:**
+1. Clear browser localStorage:
+   ```javascript
+   localStorage.clear()
+   ```
+
+2. Check JWT_SECRET in `backend/.env`
+3. Re-login
+
+---
+
+## 🧪 Testing Checklist
+
+Run through this checklist to verify everything:
+
+### Backend Tests
+- [ ] `http://localhost:5000/health` returns OK
+- [ ] `http://localhost:5000/api/test/health-check` works
+- [ ] MongoDB connection successful
+- [ ] All routes accessible
+
+### Frontend Tests
+- [ ] `http://localhost:3000` loads
+- [ ] Login page accessible
+- [ ] OTP can be sent
+- [ ] OTP visible in response (dev mode)
+- [ ] Login successful
+- [ ] Dashboard loads after login
+
+### Service Tests
+- [ ] AI Doubt Solver works
+- [ ] Quiz generation works
+- [ ] Content upload works
+- [ ] Analytics charts display
+- [ ] Classroom manager loads
+
+---
+
+## 📞 Still Having Issues?
+
+Provide:
+1. **Error message** (exact text)
+2. **Which page/service** is failing
+3. **Backend console output**
+4. **Browser console errors**
+5. **Network tab** errors
+
+I'll fix it immediately! 🚀
 

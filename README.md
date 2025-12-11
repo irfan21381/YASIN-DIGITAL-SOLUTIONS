@@ -1,350 +1,202 @@
-<<<<<<< HEAD
-# YDS (Yasin Digital Solutions) - EduAI Platform
+# YDS EduAI - AI Learning Suite for Colleges
 
-A complete, production-ready full-stack web application for educational management with AI-powered learning assistance. Built with TypeScript, React, Node.js, Express, and MongoDB.
+India's first full AI-powered college learning platform with multi-role support, AI doubt solving, quiz generation, and comprehensive analytics.
 
 ## 🚀 Features
 
-### Roles & Permissions
-- **SUPER_ADMIN**: Global control - create colleges, add managers, view global analytics
-- **MANAGER**: College-scoped - add teachers, add students, approve uploads, view college analytics
-- **TEACHER**: Subject-scoped - upload materials, create quizzes, view student progress
-- **STUDENT**: Two types
-  - College-registered (full access to college-specific content)
-  - Public/Free (limited access to public content)
-
-### Authentication
-- JWT-based authentication with access tokens
-- Email OTP flow for login and password reset
-- Password-based login
-- Protected routes with role-based authorization
-
 ### Core Features
-- Material upload and management (with manager approval)
-- Quiz creation and attempts
-- Internship listings and applications
-- AI-powered RAG (Retrieval Augmented Generation) assistant
-- Student dashboard with stats and activity tracking
-- File uploads (local storage with S3-ready hooks)
+- **Multi-Role Authentication**: Single email with multiple roles (Super Admin, College Manager, Teacher, Student, Employee, Client)
+- **OTP-Based Login**: Secure email OTP authentication
+- **College Management**: Complete college, teacher, and student management system
+- **Digital Content System**: Upload and manage notes, PDFs, PPTs, videos, and question banks
+- **AI Doubt Solver**: RAG-based doubt solving using teacher-uploaded materials
+- **AI Quiz Generator**: Automatic quiz generation with anti-cheat system
+- **AI Notes Generator**: Generate summaries, short/long answers, and formula lists
+- **AI Coding Lab**: Online compiler with AI assistance
+- **AI Analytics Dashboard**: Comprehensive analytics with charts
+- **AI Classroom Manager**: Track students, progress, and assignments
+- **Free Public Student Mode**: Public access for brand growth
 
-## 📋 Prerequisites
+### Security Features
+- College-level data separation
+- Student data encryption
+- S3 secure file storage
+- Audit logs for all actions
+- Role-based access control
 
-- Node.js 18+ and npm
+## 🏗️ Tech Stack
+
+### Backend
+- Node.js + Express
+- MongoDB + Mongoose
+- JWT + OTP Authentication
+- AWS S3 for file storage
+- OpenAI/Groq API for AI features
+- Multer for file uploads
+
+### Frontend
+- Next.js 14 (App Router)
+- TypeScript
+- Tailwind CSS
+- Zustand for state management
+- React Query for data fetching
+- Axios for API calls
+
+## 📦 Installation
+
+### Prerequisites
+- Node.js 18+ 
 - MongoDB (local or Atlas)
-- Gmail account with App Password (for email OTP)
+- AWS S3 account (for file storage)
+- OpenAI or Groq API key
 
-## 🛠️ Installation & Setup
-
-### 1. Clone the Repository
-
-```bash
-git clone <repository-url>
-cd YDS-main
-```
-
-### 2. Backend Setup
+### Backend Setup
 
 ```bash
 cd backend
 npm install
+cp .env.example .env
+# Edit .env with your configuration
+npm run dev
 ```
 
-Create a `.env` file in the `backend/` directory:
+### Frontend Setup
 
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+### Environment Variables
+
+Backend `.env`:
 ```env
 PORT=5000
-MONGO_URI=mongodb://localhost:27017/yds
-JWT_SECRET=supersecret
-JWT_EXPIRES_IN=7d
-FRONTEND_ORIGIN=http://localhost:8080
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=465
-EMAIL_USER=your@gmail.com
+MONGODB_URI=mongodb://localhost:27017/yds-eduai
+JWT_SECRET=your-secret-key
+OPENAI_API_KEY=your-openai-key
+GROQ_API_KEY=your-groq-key
+AWS_ACCESS_KEY_ID=your-aws-key
+AWS_SECRET_ACCESS_KEY=your-aws-secret
+AWS_S3_BUCKET=your-bucket-name
+EMAIL_USER=your-email@gmail.com
 EMAIL_PASS=your-app-password
 ```
 
-**Note**: For Gmail, you need to:
-1. Enable 2-Step Verification
-2. Generate an App Password: https://myaccount.google.com/apppasswords
-3. Use the generated App Password in `EMAIL_PASS`
-
-### 3. Frontend Setup
-
-```bash
-cd ../frontend
-npm install
-```
-
-Create a `.env` file in the root directory (or `frontend/` if separate):
-
+Frontend `.env.local`:
 ```env
-VITE_API_URL=http://localhost:5000/api
+NEXT_PUBLIC_API_URL=http://localhost:5000/api
 ```
 
-### 4. Database Setup
+## 🗂️ Project Structure
 
-Make sure MongoDB is running:
-
-```bash
-# If using local MongoDB
-mongod
-
-# Or use MongoDB Atlas connection string in MONGO_URI
+```
+yds-eduai/
+├── backend/
+│   ├── src/
+│   │   ├── config/          # Configuration files
+│   │   ├── controllers/     # Route controllers
+│   │   ├── middlewares/     # Auth, upload, audit
+│   │   ├── models/          # MongoDB models
+│   │   ├── routes/          # API routes
+│   │   ├── services/        # Business logic
+│   │   └── utils/           # Utility functions
+│   └── server.js
+├── frontend/
+│   ├── app/                 # Next.js app directory
+│   ├── components/          # React components
+│   ├── lib/                 # Utilities, API, store
+│   └── public/              # Static assets
+└── README.md
 ```
 
-### 5. Seed the Database
+## 🔐 User Roles
 
-```bash
-cd backend
-npm run seed
-```
+1. **SUPER_ADMIN**: Full system access
+2. **COLLEGE_MANAGER**: Manage college, teachers, students
+3. **TEACHER**: Upload content, create quizzes, view analytics
+4. **STUDENT**: Access content, take quizzes, use AI features
+5. **EMPLOYEE**: Limited access
+6. **CLIENT**: External access
 
-This will create:
-- Super Admin (admin@yds.com / admin123)
-- Sample College
-- Manager (manager@yds.com / manager123)
-- Teacher (teacher@yds.com / teacher123)
-- College Students (student1@yds.com, student2@yds.com / student123)
-- Public Students (public1@yds.com, public2@yds.com / public123)
-- Sample Subjects
-- Sample Internships
-
-## 🚀 Running the Application
-
-### Development Mode
-
-**Terminal 1 - Backend:**
-```bash
-cd backend
-npm start
-```
-Backend will run on http://localhost:5000
-
-**Terminal 2 - Frontend:**
-```bash
-npm run dev
-```
-Frontend will run on http://localhost:8080
-
-### Production Mode
-
-**Backend:**
-```bash
-cd backend
-npm run build
-npm run serve
-```
-
-**Frontend:**
-```bash
-npm run build
-npm run preview
-```
-
-## 🐳 Docker Setup
-
-### Using Docker Compose
-
-```bash
-# Create .env file in root with required variables
-docker-compose up -d
-```
-
-This will start:
-- MongoDB on port 27017
-- Backend on port 5000
-- Frontend on port 80
-
-### Individual Docker Builds
-
-**Backend:**
-```bash
-docker build -f Dockerfile.backend -t yds-backend .
-docker run -p 5000:5000 --env-file backend/.env yds-backend
-```
-
-**Frontend:**
-```bash
-docker build -f Dockerfile.frontend -t yds-frontend .
-docker run -p 80:80 yds-frontend
-```
-
-## 📡 API Endpoints
+## 📚 API Endpoints
 
 ### Authentication
-- `POST /api/auth/register` - Register new user (public students)
-- `POST /api/auth/login` - Login with password
 - `POST /api/auth/send-otp` - Send OTP to email
-- `POST /api/auth/verify-otp` - Verify OTP and get JWT
-- `POST /api/auth/change-password` - Change password (protected)
+- `POST /api/auth/verify-otp` - Verify OTP and login
+- `GET /api/auth/me` - Get current user
+- `POST /api/auth/switch-role` - Switch active role
 
-### Student Routes (Protected - STUDENT role)
-- `GET /api/student/me` - Get student profile
-- `GET /api/student/stats` - Get student statistics
-- `GET /api/student/materials` - Get available materials
-- `GET /api/student/materials/:materialId` - Get material details
-- `GET /api/student/quizzes` - Get available quizzes
-- `GET /api/student/quizzes/:quizId` - Get quiz details
-- `POST /api/student/quizzes/:quizId/submit` - Submit quiz attempt
-- `GET /api/student/subjects` - Get enrolled subjects
+### Content
+- `GET /api/content` - Get all content
+- `POST /api/content` - Upload content
+- `GET /api/content/:id` - Get content by ID
+- `PUT /api/content/:id/verify` - Verify content
 
-### Internships (Public + Protected)
-- `GET /api/internships` - List internships
-- `GET /api/internships/:id` - Get internship details
-- `POST /api/internships/:id/apply` - Apply for internship (STUDENT)
-- `GET /api/internships/my-applications` - Get my applications (STUDENT)
+### Quiz
+- `GET /api/quiz` - Get all quizzes
+- `POST /api/ai/quiz/generate` - Generate quiz with AI
+- `POST /api/quiz/:id/start` - Start quiz attempt
+- `POST /api/quiz/:attemptId/submit` - Submit quiz
 
-### Admin Routes (Protected - SUPER_ADMIN role)
-- `GET /api/admin/stats` - Get global analytics
-- `POST /api/admin/college` - Create college
-- `GET /api/admin/colleges` - Get all colleges
-- `POST /api/admin/college/:collegeId/manager` - Assign manager
-- `PATCH /api/admin/college/:collegeId/activate` - Activate/deactivate college
+### AI Services
+- `POST /api/ai/chat` - Send message to doubt solver
+- `POST /api/ai/notes/generate` - Generate notes
+- `GET /api/ai/mentor` - Get AI mentor recommendations
 
-### Teacher Routes (Protected - TEACHER role)
-- `POST /api/teacher/materials` - Upload material
-- `GET /api/teacher/materials` - Get my materials
-- `POST /api/teacher/quizzes` - Create quiz
-- `GET /api/teacher/quizzes` - Get my quizzes
+### Analytics
+- `GET /api/analytics/student-usage` - Student usage stats
+- `GET /api/analytics/weak-subjects` - Weak subject detection
+- `GET /api/analytics/quiz-marks` - Quiz performance
 
-### Manager Routes (Protected - MANAGER role)
-- `GET /api/manager/teachers` - Get college teachers
-- `POST /api/manager/teacher` - Add teacher
-- `GET /api/manager/materials/pending` - Get pending materials
-- `PATCH /api/manager/materials/:id/approve` - Approve material
-- `GET /api/manager/analytics` - Get college analytics
+## 🎯 Key Features Implementation
 
-### AI Routes (Protected)
-- `POST /api/ai/query` - AI/RAG query (returns assistant message + citations)
+### AI Doubt Solver (RAG)
+1. Teacher uploads content (PDF/PPT/Notes)
+2. Backend extracts text and generates embeddings
+3. Student asks doubt
+4. System finds relevant chunks using vector similarity
+5. AI answers only from teacher's materials
+6. If topic not found, returns: "Teacher has not uploaded this topic yet."
 
-## 🗄️ Database Schema
+### Anti-Cheat Quiz System
+- Browser-side tracking: tab switch, screen blur, device change
+- Backend logging of all cheating events
+- Cheating score calculation
+- Auto-submit on timer
+- Teacher dashboard with cheating analysis
 
-### Models
-- **User**: Base user model with email, password, role, collegeId
-- **College**: College information
-- **Student**: Student profile (studentNumber, year, branch, enrolledSubjects)
-- **Teacher**: Teacher profile linked to User
-- **Subject**: Course/subject information
-- **Material**: Uploaded materials (PDF, DOCX) with approval status
-- **Quiz**: Quiz with questions and answers
-- **QuizAttempt**: Student quiz attempts with scores
-- **Internship**: Internship listings
-- **InternshipApplication**: Student applications for internships
-- **AuditLog**: Activity logging for analytics
+### AI Quiz Generator
+- Teacher selects unit, difficulty, number of questions
+- AI generates questions from uploaded content
+- Each student gets different shuffled set
+- Teacher can edit before publishing
 
-## 🔒 Security Features
+## 🚢 Deployment
 
-- JWT token-based authentication
-- Bcrypt password hashing
-- CORS configured with specific origin (not wildcard)
-- Input sanitization (express-mongo-sanitize)
-- Rate limiting
-- Helmet.js for security headers
-- Role-based access control middleware
+### Backend Deployment
+1. Set up MongoDB Atlas
+2. Configure AWS S3 bucket
+3. Set environment variables
+4. Deploy to Heroku/Railway/DigitalOcean
 
-## 📧 Email Configuration
+### Frontend Deployment
+1. Build: `npm run build`
+2. Deploy to Vercel/Netlify
+3. Set environment variables
 
-The application uses NodeMailer with SMTP. For Gmail:
+## 📝 License
 
-1. Enable 2-Step Verification
-2. Generate App Password: https://myaccount.google.com/apppasswords
-3. Use the App Password in `EMAIL_PASS`
+MIT
 
-For other email providers, update `EMAIL_HOST` and `EMAIL_PORT` accordingly.
+## 👥 Contributing
 
-## 🔄 Migration Notes
+Contributions are welcome! Please open an issue or submit a pull request.
 
-### Switching File Uploads to S3
+## 📧 Support
 
-The codebase includes hooks for S3 integration. To enable:
+For support, email support@ydseduai.com
 
-1. Install AWS SDK (already in dependencies)
-2. Update `backend/utils/fileProcessor.ts` to upload to S3
-3. Set environment variables:
-   ```env
-   AWS_ACCESS_KEY_ID=your-key
-   AWS_SECRET_ACCESS_KEY=your-secret
-   AWS_REGION=us-east-1
-   AWS_S3_BUCKET=yds-uploads
-   ```
-
-### Adding Embeddings Store
-
-The AI service layer includes stubbed functions for RAG:
-- `indexMaterial(materialId)` - Index material for vector search
-- `queryRag(userId, prompt, context)` - Query RAG system
-
-To implement:
-1. Set up vector database (Pinecone, Weaviate, or MongoDB Atlas Vector Search)
-2. Update `backend/services/embeddingService.ts`
-3. Update `backend/services/vectorService.ts`
-
-## 🧪 Testing
-
-### Smoke Tests
-
-Basic acceptance tests can be run manually:
-
-1. **Auth Flow:**
-   ```bash
-   # Register
-   curl -X POST http://localhost:5000/api/auth/register \
-     -H "Content-Type: application/json" \
-     -d '{"email":"test@example.com","password":"test123","role":"STUDENT","isPublicStudent":true}'
-   
-   # Login
-   curl -X POST http://localhost:5000/api/auth/login \
-     -H "Content-Type: application/json" \
-     -d '{"email":"test@example.com","password":"test123"}'
-   ```
-
-2. **Student Stats:**
-   ```bash
-   curl -X GET http://localhost:5000/api/student/stats \
-     -H "Authorization: Bearer YOUR_JWT_TOKEN"
-   ```
-
-## 📝 API Documentation
-
-For detailed API documentation, see:
-- Postman Collection: `docs/postman-collection.json` (to be created)
-- OpenAPI Spec: `docs/openapi.yaml` (to be created)
-
-## 🐛 Troubleshooting
-
-### CORS Errors
-- Ensure `FRONTEND_ORIGIN` in backend `.env` matches your frontend URL
-- Check that frontend is making requests with `credentials: true`
-
-### MongoDB Connection Issues
-- Verify MongoDB is running: `mongosh` or check MongoDB Compass
-- Check `MONGO_URI` in `.env`
-- For Atlas, ensure IP whitelist includes your IP
-
-### Email Not Sending
-- Verify Gmail App Password is correct
-- Check `EMAIL_HOST` and `EMAIL_PORT`
-- Test SMTP connection separately
-
-### File Upload Issues
-- Ensure `backend/uploads/` directory exists and is writable
-- Check file size limits in `server.ts` (currently 10mb)
-
-## 📄 License
-
-ISC
-
-## 👥 Contributors
-
-YDS Development Team
-
-## 📞 Support
-
-For issues and questions, please open an issue in the repository.
-
----
-
-**Built with ❤️ by Yasin Digital Solutions**
-=======
-# YASIN-DIGITTAL-SOLUTIONS
->>>>>>> 9539ddc66a83af515944dcfe3216718e593a84fc
+"# yds-edu-ai-2" 
+"# yds-edu-ai-2" 

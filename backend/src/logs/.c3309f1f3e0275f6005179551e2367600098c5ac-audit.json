@@ -1,0 +1,35 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 30
+    },
+    "auditLog": "D:\\YDS\\YDS EDUAI\\yds-edu-ai-2-main\\backend\\src\\logs\\.c3309f1f3e0275f6005179551e2367600098c5ac-audit.json",
+    "files": [
+        {
+            "date": 1765019103067,
+            "name": "D:\\YDS\\YDS EDUAI\\yds-edu-ai-2-main\\backend\\src\\logs\\app-2025-12-06.log",
+            "hash": "fa6fdfc51822119487f25d984e91ca69b7f11a05bd4ccdd64d7926fc9d013fda"
+        },
+        {
+            "date": 1765080836014,
+            "name": "D:\\YDS\\YDS EDUAI\\yds-edu-ai-2-main\\backend\\src\\logs\\app-2025-12-07.log",
+            "hash": "e1a88af9838eb096f3eb3de5f197f9edd500bad7d47103a8aa43fd6a28accc5a"
+        },
+        {
+            "date": 1765210856819,
+            "name": "D:\\YDS\\YDS EDUAI\\yds-edu-ai-2-main\\backend\\src\\logs\\app-2025-12-08.log",
+            "hash": "1697835b70cbc6725b50fdabb80b5bb3b6b2bea93b1e1abd94de80b54e85f004"
+        },
+        {
+            "date": 1765218641418,
+            "name": "D:\\YDS\\YDS EDUAI\\yds-edu-ai-2-main\\backend\\src\\logs\\app-2025-12-09.log",
+            "hash": "d428da9e8aef73294c44b2ed5f08cd6968bf290f46d9885406d90758eeb8f953"
+        },
+        {
+            "date": 1765447196091,
+            "name": "D:\\YDS\\YDS EDUAI\\yds-edu-ai-2-main\\backend\\src\\logs\\app-2025-12-11.log",
+            "hash": "aad41dd7734ca08ed7be676ca134f5562e886ae22d7a51a524e9453879d2b9a3"
+        }
+    ],
+    "hashType": "sha256"
+}
