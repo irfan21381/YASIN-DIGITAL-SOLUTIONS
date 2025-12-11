@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # YDS (Yasin Digital Solutions) - EduAI Platform
 
 A complete, production-ready full-stack web application for educational management with AI-powered learning assistance. Built with TypeScript, React, Node.js, Express, and MongoDB.
@@ -344,3 +345,6 @@ For issues and questions, please open an issue in the repository.
 ---
 
 **Built with ❤️ by Yasin Digital Solutions**
+=======
+# YASIN-DIGITTAL-SOLUTIONS
+>>>>>>> 9539ddc66a83af515944dcfe3216718e593a84fc
