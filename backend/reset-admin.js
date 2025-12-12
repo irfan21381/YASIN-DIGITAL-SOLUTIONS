@@ -1,44 +1,40 @@
-// scripts/reset-admin.js
-
 require("dotenv").config();
 const bcrypt = require("bcryptjs");
-const { db } = require("../src/config/database");
-const { users } = require("../src/db/schema/users");
-const { eq, sql } = require("drizzle-orm");
+const { PrismaClient } = require("@prisma/client");
+
+const prisma = new PrismaClient();
 
 const resetAdmin = async () => {
   try {
-    const email = "admin@yds.com";
-    const plainPassword = "admin123";
+    const email = process.env.ADMIN_EMAIL || "admin@yds.com";
+    const plainPassword = process.env.ADMIN_PASSWORD || "admin123";
 
-    console.log("🔌 Using Postgres via Drizzle (no MongoDB).");
+    console.log("🔌 Using Postgres via Prisma (no MongoDB).");
 
     // 1. Delete existing admin (same email)
     console.log(`🗑️  Deleting existing user with email: ${email}...`);
-    await db.delete(users).where(eq(users.email, email));
+    await prisma.user.deleteMany({
+      where: { email },
+    });
 
     // 2. Create NEW Super Admin
     console.log("⚡ Creating new Super Admin...");
 
     const hashedPassword = await bcrypt.hash(plainPassword, 10);
 
-    const [newAdmin] = await db
-      .insert(users)
-      .values({
+    const newAdmin = await prisma.user.create({
+      data: {
         email,
         name: "Super Admin",
         password: hashedPassword,
-        roles: ["SUPER_ADMIN"],
-        activeRole: "SUPER_ADMIN",
-        isActive: true,
-        usageStats: {
+        role: "SUPER_ADMIN",
+        isVerified: true,
+        usageStats: JSON.stringify({
           totalLogins: 0,
           lastActive: null,
-        },
-        createdAt: sql`NOW()`,
-        updatedAt: sql`NOW()`,
-      })
-      .returning();
+        }),
+      },
+    });
 
     console.log("------------------------------------------------");
     console.log("✅ ADMIN RESET SUCCESSFUL (PostgreSQL)");
