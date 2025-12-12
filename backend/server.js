@@ -1,5 +1,5 @@
 // ------------------------------------------------------------
-// server.js (PostgreSQL + Drizzle FINAL)
+// server.js (PostgreSQL + Prisma FINAL)
 // ------------------------------------------------------------
 
 console.log("🟦 DEBUG: Server starting...");
@@ -26,8 +26,8 @@ const corsMiddleware = require("./src/config/cors");
 const errorHandler = require("./src/middlewares/error.middleware");
 const logger = require("./src/config/logger");
 
-const { db } = require("./src/config/database");
-const { sql } = require("drizzle-orm");
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
 
 const app = express();
 
@@ -65,10 +65,10 @@ app.use((req, res, next) => {
 // 2️⃣ RATE LIMITER
 // ------------------------------------------------------------
 app.use(
-  "/api/",
   rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
+    message: "Too many requests from this IP, please try again later.",
   })
 );
 
@@ -92,23 +92,25 @@ const managerRoutes = require("./src/routes/manager.routes");
 const testRoutes = require("./src/routes/test.routes");
 
 // Quick type check (can remove after everything works)
-console.log("🟦 DEBUG route types:", {
-  auth: typeof authRoutes,
-  users: typeof userRoutes,
-  admin: typeof adminRoutes,
-  colleges: typeof collegeRoutes,
-  subjects: typeof subjectRoutes,
-  content: typeof contentRoutes,
-  quiz: typeof quizRoutes,
-  ai: typeof aiRoutes,
-  analytics: typeof analyticsRoutes,
-  coding: typeof codingRoutes,
-  public: typeof publicRoutes,
-  teacher: typeof teacherRoutes,
-  student: typeof studentRoutes,
-  manager: typeof managerRoutes,
-  test: typeof testRoutes,
-});
+if (process.env.NODE_ENV === 'development') {
+  console.log("🟦 DEBUG route types:", {
+    auth: typeof authRoutes,
+    users: typeof userRoutes,
+    admin: typeof adminRoutes,
+    colleges: typeof collegeRoutes,
+    subjects: typeof subjectRoutes,
+    content: typeof contentRoutes,
+    quiz: typeof quizRoutes,
+    ai: typeof aiRoutes,
+    analytics: typeof analyticsRoutes,
+    coding: typeof codingRoutes,
+    public: typeof publicRoutes,
+    teacher: typeof teacherRoutes,
+    student: typeof studentRoutes,
+    manager: typeof managerRoutes,
+    test: typeof testRoutes,
+  });
+}
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
@@ -131,7 +133,7 @@ app.use("/api/test", testRoutes);
 // ------------------------------------------------------------
 app.get("/health", async (req, res) => {
   try {
-    await db.execute(sql`SELECT 1`);
+    await prisma.$queryRaw`SELECT 1`;
     res.json({
       status: "OK",
       database: "connected",
@@ -139,8 +141,8 @@ app.get("/health", async (req, res) => {
     });
   } catch (e) {
     console.error("Health DB error:", e.message);
-    res.json({
-      status: "OK",
+    res.status(503).json({
+      status: "ERROR",
       database: "disconnected",
       timestamp: new Date().toISOString(),
     });
@@ -163,7 +165,7 @@ app.listen(PORT, async () => {
 
   try {
     console.log("🟦 DEBUG: Pinging DB with SELECT 1...");
-    await db.execute(sql`SELECT 1`);
+    await prisma.$queryRaw`SELECT 1`;
     console.log("🟩 DEBUG: DB SELECT 1 OK");
   } catch (err) {
     console.error("❌ DEBUG DB ERROR on startup (non-fatal):", err.message);
@@ -172,3 +174,4 @@ app.listen(PORT, async () => {
 });
 
 module.exports = app;
+
