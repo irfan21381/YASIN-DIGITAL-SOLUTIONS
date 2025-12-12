@@ -3,15 +3,13 @@ import { defineConfig, env } from "prisma/config";
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
-
   migrations: {
-    // Required FIX for Render Free PostgreSQL (no SUPERUSER rights)
+    // Render / managed Postgres friendly: no SUPERUSER needed [web:21]
     dbExecute: {
       disableTerminateConnections: true,
     },
   },
-
   datasource: {
-    url: env("DATABASE_URL"),
+    url: env("DATABASE_URL"), // must be a valid postgres:// or postgresql:// URL [web:23][web:30]
   },
 });
