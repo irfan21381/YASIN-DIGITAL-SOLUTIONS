@@ -1,19 +1,21 @@
 // ------------------------------------------------------------
-// server.js (PostgreSQL + Prisma FINAL)
+// server.js — FINAL (PostgreSQL + Prisma | Render-ready)
 // ------------------------------------------------------------
 
 console.log("🟦 DEBUG: Server starting...");
 require("dotenv").config();
 
-console.log("🟦 DEBUG: Loaded .env");
-console.log("🟦 DEBUG: DATABASE_URL =", process.env.DATABASE_URL);
+console.log("🟦 DEBUG: ENV loaded");
+console.log("🟦 DEBUG: DATABASE_URL loaded =", !!process.env.DATABASE_URL);
 
-// Global crash logging
+// ------------------------------------------------------------
+// GLOBAL CRASH LOGGING (do not remove)
+// ------------------------------------------------------------
 process.on("unhandledRejection", (reason) => {
-  console.error("UNHANDLED REJECTION:", reason);
+  console.error("❌ UNHANDLED REJECTION:", reason);
 });
 process.on("uncaughtException", (err) => {
-  console.error("UNCAUGHT EXCEPTION:", err);
+  console.error("❌ UNCAUGHT EXCEPTION:", err);
 });
 
 const express = require("express");
@@ -26,6 +28,9 @@ const corsMiddleware = require("./src/config/cors");
 const errorHandler = require("./src/middlewares/error.middleware");
 const logger = require("./src/config/logger");
 
+// ------------------------------------------------------------
+// PRISMA (SAFE INITIALIZATION)
+// ------------------------------------------------------------
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
@@ -68,65 +73,29 @@ app.use(
   rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
-    message: "Too many requests from this IP, please try again later.",
+    standardHeaders: true,
+    legacyHeaders: false,
   })
 );
 
 // ------------------------------------------------------------
-// 3️⃣ ROUTES (each must export `module.exports = router`)
+// 3️⃣ ROUTES
 // ------------------------------------------------------------
-const authRoutes = require("./src/routes/auth.routes");
-const userRoutes = require("./src/routes/user.routes");
-const adminRoutes = require("./src/routes/admin.routes");
-const collegeRoutes = require("./src/routes/college.routes");
-const subjectRoutes = require("./src/routes/subject.routes");
-const contentRoutes = require("./src/routes/content.routes");
-const quizRoutes = require("./src/routes/quiz.routes");
-const aiRoutes = require("./src/routes/ai.routes");
-const analyticsRoutes = require("./src/routes/analytics.routes");
-const codingRoutes = require("./src/routes/coding.routes");
-const publicRoutes = require("./src/routes/public.routes");
-const teacherRoutes = require("./src/routes/teacher.routes");
-const studentRoutes = require("./src/routes/student.routes");
-const managerRoutes = require("./src/routes/manager.routes");
-const testRoutes = require("./src/routes/test.routes");
-
-// Quick type check (can remove after everything works)
-if (process.env.NODE_ENV === 'development') {
-  console.log("🟦 DEBUG route types:", {
-    auth: typeof authRoutes,
-    users: typeof userRoutes,
-    admin: typeof adminRoutes,
-    colleges: typeof collegeRoutes,
-    subjects: typeof subjectRoutes,
-    content: typeof contentRoutes,
-    quiz: typeof quizRoutes,
-    ai: typeof aiRoutes,
-    analytics: typeof analyticsRoutes,
-    coding: typeof codingRoutes,
-    public: typeof publicRoutes,
-    teacher: typeof teacherRoutes,
-    student: typeof studentRoutes,
-    manager: typeof managerRoutes,
-    test: typeof testRoutes,
-  });
-}
-
-app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/admin", adminRoutes);
-app.use("/api/colleges", collegeRoutes);
-app.use("/api/subjects", subjectRoutes);
-app.use("/api/content", contentRoutes);
-app.use("/api/quiz", quizRoutes);
-app.use("/api/ai", aiRoutes);
-app.use("/api/analytics", analyticsRoutes);
-app.use("/api/coding", codingRoutes);
-app.use("/api/public", publicRoutes);
-app.use("/api/teacher", teacherRoutes);
-app.use("/api/student", studentRoutes);
-app.use("/api/manager", managerRoutes);
-app.use("/api/test", testRoutes);
+app.use("/api/auth", require("./src/routes/auth.routes"));
+app.use("/api/users", require("./src/routes/user.routes"));
+app.use("/api/admin", require("./src/routes/admin.routes"));
+app.use("/api/colleges", require("./src/routes/college.routes"));
+app.use("/api/subjects", require("./src/routes/subject.routes"));
+app.use("/api/content", require("./src/routes/content.routes"));
+app.use("/api/quiz", require("./src/routes/quiz.routes"));
+app.use("/api/ai", require("./src/routes/ai.routes"));
+app.use("/api/analytics", require("./src/routes/analytics.routes"));
+app.use("/api/coding", require("./src/routes/coding.routes"));
+app.use("/api/public", require("./src/routes/public.routes"));
+app.use("/api/teacher", require("./src/routes/teacher.routes"));
+app.use("/api/student", require("./src/routes/student.routes"));
+app.use("/api/manager", require("./src/routes/manager.routes"));
+app.use("/api/test", require("./src/routes/test.routes"));
 
 // ------------------------------------------------------------
 // 4️⃣ HEALTH CHECK
@@ -139,8 +108,8 @@ app.get("/health", async (req, res) => {
       database: "connected",
       timestamp: new Date().toISOString(),
     });
-  } catch (e) {
-    console.error("Health DB error:", e.message);
+  } catch (err) {
+    console.error("❌ Health DB error:", err.message);
     res.status(503).json({
       status: "ERROR",
       database: "disconnected",
@@ -150,28 +119,26 @@ app.get("/health", async (req, res) => {
 });
 
 // ------------------------------------------------------------
-// 5️⃣ ERROR HANDLER
+// 5️⃣ ERROR HANDLER (LAST)
 // ------------------------------------------------------------
 app.use(errorHandler);
 
 // ------------------------------------------------------------
 // 6️⃣ START SERVER
 // ------------------------------------------------------------
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 10000;
 
 app.listen(PORT, async () => {
-  console.log(`🟩 DEBUG: Server started on port ${PORT}`);
-  logger.info(`🚀 YDS EDU-AI Backend running on port ${PORT}`);
+  console.log(`🟩 Server running on port ${PORT}`);
+  logger.info(`🚀 YDS EDU-AI Backend live on port ${PORT}`);
 
+  // DB warm-up (non-fatal)
   try {
-    console.log("🟦 DEBUG: Pinging DB with SELECT 1...");
     await prisma.$queryRaw`SELECT 1`;
-    console.log("🟩 DEBUG: DB SELECT 1 OK");
+    console.log("🟩 DB connection verified");
   } catch (err) {
-    console.error("❌ DEBUG DB ERROR on startup (non-fatal):", err.message);
-    logger.error("❌ Database ping failed on startup:", err.message);
+    console.error("⚠️ DB ping failed (non-fatal):", err.message);
   }
 });
 
 module.exports = app;
-
