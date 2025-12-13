@@ -1,6 +1,8 @@
-export const dynamic = "force-dynamic";
+
 
 'use client'
+
+export const dynamic = "force-dynamic";
 
 import Layout from '@/components/AppShell'
 import { useQuery } from '@tanstack/react-query'
