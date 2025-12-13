@@ -1,6 +1,8 @@
-export const dynamic = "force-dynamic"; // Required for React Query pages
+
 
 'use client';
+
+export const dynamic = "force-dynamic"; // Required for React Query pages
 
 import Layout from '../../layout';
 import { useQuery } from '@tanstack/react-query';
