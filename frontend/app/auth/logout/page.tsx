@@ -6,17 +6,23 @@ import { useState } from 'react'
 
 export default function LogoutPage() {
   const router = useRouter()
-  const { logout } = useAuthStore()
+  const logout = useAuthStore((state) => state.logout)
   const [loading, setLoading] = useState(false)
 
   const handleLogout = () => {
+    if (loading) return
     setLoading(true)
+
     logout()
-    router.replace('/auth/login')
+
+    // small delay for UX smoothness
+    setTimeout(() => {
+      router.replace('/auth/login')
+    }, 300)
   }
 
   return (
-    <div className="text-white flex flex-col items-center justify-center h-screen space-y-4">
+    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center space-y-5">
       <h1 className="text-xl font-bold">Do you want to logout?</h1>
 
       <button
@@ -29,6 +35,7 @@ export default function LogoutPage() {
 
       <button
         onClick={() => router.back()}
+        disabled={loading}
         className="text-gray-400 hover:text-gray-200 text-sm"
       >
         Cancel
