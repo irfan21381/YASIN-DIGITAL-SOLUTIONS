@@ -2,14 +2,11 @@
 // server.js — FINAL (PostgreSQL + Prisma | Render-ready)
 // ------------------------------------------------------------
 
-console.log("🟦 DEBUG: Server starting...");
 require("dotenv").config();
-
-console.log("🟦 DEBUG: ENV loaded");
-console.log("🟦 DEBUG: DATABASE_URL loaded =", !!process.env.DATABASE_URL);
+console.log("🟦 Server booting...");
 
 // ------------------------------------------------------------
-// GLOBAL CRASH LOGGING (do not remove)
+// GLOBAL CRASH LOGGING
 // ------------------------------------------------------------
 process.on("unhandledRejection", (reason) => {
   console.error("❌ UNHANDLED REJECTION:", reason);
@@ -29,7 +26,7 @@ const errorHandler = require("./src/middlewares/error.middleware");
 const logger = require("./src/config/logger");
 
 // ------------------------------------------------------------
-// PRISMA (SAFE INITIALIZATION)
+// PRISMA
 // ------------------------------------------------------------
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
@@ -37,7 +34,7 @@ const prisma = new PrismaClient();
 const app = express();
 
 // ------------------------------------------------------------
-// 1️⃣ GLOBAL MIDDLEWARE
+// GLOBAL MIDDLEWARE
 // ------------------------------------------------------------
 app.use(corsMiddleware);
 app.options("*", corsMiddleware);
@@ -59,15 +56,13 @@ app.use((req, res, next) => {
   if (req.is("text/plain") && typeof req.body === "string") {
     try {
       req.body = JSON.parse(req.body);
-    } catch {
-      // ignore
-    }
+    } catch {}
   }
   next();
 });
 
 // ------------------------------------------------------------
-// 2️⃣ RATE LIMITER
+// RATE LIMITING
 // ------------------------------------------------------------
 app.use(
   rateLimit({
@@ -79,8 +74,12 @@ app.use(
 );
 
 // ------------------------------------------------------------
-// 3️⃣ ROUTES
+// ROUTES
 // ------------------------------------------------------------
+app.get("/", (req, res) => {
+  res.send("🚀 YDS EDU-AI Backend is running");
+});
+
 app.use("/api/auth", require("./src/routes/auth.routes"));
 app.use("/api/users", require("./src/routes/user.routes"));
 app.use("/api/admin", require("./src/routes/admin.routes"));
@@ -98,7 +97,7 @@ app.use("/api/manager", require("./src/routes/manager.routes"));
 app.use("/api/test", require("./src/routes/test.routes"));
 
 // ------------------------------------------------------------
-// 4️⃣ HEALTH CHECK
+// HEALTH CHECK
 // ------------------------------------------------------------
 app.get("/health", async (req, res) => {
   try {
@@ -108,8 +107,7 @@ app.get("/health", async (req, res) => {
       database: "connected",
       timestamp: new Date().toISOString(),
     });
-  } catch (err) {
-    console.error("❌ Health DB error:", err.message);
+  } catch {
     res.status(503).json({
       status: "ERROR",
       database: "disconnected",
@@ -119,26 +117,34 @@ app.get("/health", async (req, res) => {
 });
 
 // ------------------------------------------------------------
-// 5️⃣ ERROR HANDLER (LAST)
+// ERROR HANDLER (LAST)
 // ------------------------------------------------------------
 app.use(errorHandler);
 
 // ------------------------------------------------------------
-// 6️⃣ START SERVER
+// START SERVER
 // ------------------------------------------------------------
 const PORT = process.env.PORT || 10000;
 
-app.listen(PORT, async () => {
+const server = app.listen(PORT, async () => {
   console.log(`🟩 Server running on port ${PORT}`);
   logger.info(`🚀 YDS EDU-AI Backend live on port ${PORT}`);
 
-  // DB warm-up (non-fatal)
   try {
     await prisma.$queryRaw`SELECT 1`;
     console.log("🟩 DB connection verified");
-  } catch (err) {
-    console.error("⚠️ DB ping failed (non-fatal):", err.message);
+  } catch {
+    console.warn("⚠️ DB ping failed (non-fatal)");
   }
+});
+
+// ------------------------------------------------------------
+// GRACEFUL SHUTDOWN
+// ------------------------------------------------------------
+process.on("SIGTERM", async () => {
+  console.log("🛑 SIGTERM received. Shutting down...");
+  await prisma.$disconnect();
+  server.close(() => process.exit(0));
 });
 
 module.exports = app;
