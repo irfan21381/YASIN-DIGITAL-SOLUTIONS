@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthStore } from '../lib/store'; // ✅ Zustand
 
-// Import all static components
+// Static components
 import Navbar from "../components/company/Navbar";
 import Hero from "../components/company/Hero";
 import About from "../components/company/About";
@@ -16,57 +16,61 @@ import Contact from "../components/company/Contact";
 import Footer from "../components/company/Footer";
 
 export default function HomePage() {
-  const { isAuthenticated, user, isLoading } = useAuth();
   const navigate = useNavigate();
 
-  // ----------------------------------------------------
-  // LOGIC TO REDIRECT AUTHENTICATED USERS TO DASHBOARD
-  // ----------------------------------------------------
+  const { user, initialized } = useAuthStore();
+
+  /* ----------------------------------------------------
+     REDIRECT AUTHENTICATED USERS
+  ---------------------------------------------------- */
   useEffect(() => {
-    // 1. Wait until the global authentication check is complete
-    if (isLoading) return; 
+    // ⏳ Wait until Zustand restores auth from localStorage
+    if (!initialized) return;
 
-    // 2. If the user IS authenticated, redirect them based on role
-    if (isAuthenticated && user) {
-      let redirectPath = '/';
+    if (!user) return; // stay on public home
 
-      // Determine the correct dashboard based on the user's role
-      switch (user.role) {
-        case 'STUDENT':
-        case 'PUBLIC_STUDENT':
-          redirectPath = '/student';
-          break;
-        case 'SUPER_ADMIN':
-          redirectPath = '/admin/dashboard';
-          break;
-        case 'MANAGER':
-          redirectPath = '/manager/dashboard';
-          break;
-        case 'TEACHER':
-          redirectPath = '/teacher/dashboard';
-          break;
-        case 'EMPLOYEE':
-          redirectPath = '/employee/dashboard';
-          break;
-        default:
-          redirectPath = '/student'; // Default fallback
-      }
-      
-      // Execute the redirect and prevent showing the marketing page
-      console.log(`User authenticated as ${user.role}. Redirecting to ${redirectPath}`);
-      navigate(redirectPath, { replace: true });
+    const role = user.activeRole;
+
+    let redirectPath = '/student';
+
+    switch (role) {
+      case 'SUPER_ADMIN':
+        redirectPath = '/admin/dashboard';
+        break;
+      case 'MANAGER':
+        redirectPath = '/manager/dashboard';
+        break;
+      case 'TEACHER':
+        redirectPath = '/teacher/dashboard';
+        break;
+      case 'EMPLOYEE':
+        redirectPath = '/employee/dashboard';
+        break;
+      case 'STUDENT':
+      case 'PUBLIC_STUDENT':
+      default:
+        redirectPath = '/student';
     }
-    
-    // 3. If the user is NOT authenticated, the effect completes, 
-    // and they stay on this public homepage.
-  }, [isAuthenticated, user, isLoading, navigate]);
 
-  // If loading, show a spinner to prevent content flicker before redirect
-  if (isLoading) {
-    return <div className="flex items-center justify-center h-screen text-xl">Checking session...</div>;
+    console.log(`✅ Authenticated as ${role}, redirecting → ${redirectPath}`);
+    navigate(redirectPath, { replace: true });
+
+  }, [user, initialized, navigate]);
+
+  /* ----------------------------------------------------
+     LOADING STATE (prevents flicker)
+  ---------------------------------------------------- */
+  if (!initialized) {
+    return (
+      <div className="flex items-center justify-center h-screen text-xl">
+        Checking session…
+      </div>
+    );
   }
-  
-  // If not authenticated (or after checking), render the public homepage content
+
+  /* ----------------------------------------------------
+     PUBLIC HOMEPAGE
+  ---------------------------------------------------- */
   return (
     <div className="pt-20">
       <Navbar />
