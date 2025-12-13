@@ -1,6 +1,9 @@
+
+'use client';
+
 export const dynamic = 'force-dynamic' // optional but good for react-query pages
 
-'use client'
+
 
 import Layout from '@/components/AppShell'
 import { useAuthStore } from '@/lib/store'
