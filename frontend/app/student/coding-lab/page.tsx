@@ -1,6 +1,9 @@
-export const dynamic = "force-dynamic"; // REQUIRED for /student dynamic pages
 
 'use client';
+
+export const dynamic = "force-dynamic"; // REQUIRED for /student dynamic pages
+
+
 
 import Layout from '../layout';
 import { useState } from 'react';
