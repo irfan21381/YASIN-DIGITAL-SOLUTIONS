@@ -1,50 +1,59 @@
+// src/lib/api.ts
 import axios from "axios";
+import { useAuthStore } from "@/lib/store";
 
-const logoutUser = () => {
-  if (typeof window !== "undefined") {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-
-    if (!window.location.pathname.startsWith("/auth")) {
-      window.location.href = "/auth/login";
-    }
-  }
-};
-
-const BACKEND_URL =
-  (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000").replace(/\/$/, "");
+/* --------------------------------------------------
+   BACKEND URL
+-------------------------------------------------- */
+const BACKEND_URL = (
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
+).replace(/\/$/, "");
 
 const api = axios.create({
   baseURL: BACKEND_URL,
-  withCredentials: true,
   timeout: 20000,
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
-api.interceptors.request.use((config: any) => {
-  if (typeof window !== "undefined") {
-    const token = localStorage.getItem("token");
+/* --------------------------------------------------
+   REQUEST INTERCEPTOR
+   → Attach JWT token
+-------------------------------------------------- */
+api.interceptors.request.use(
+  (config) => {
+    const token = useAuthStore.getState().token;
+
     if (token) {
       config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${token}`;
     }
-  }
 
-  // Only Next.js internal API routes override
-  if (config.url === "/api/auth/refresh") {
-    config.baseURL = ""; // Next.js API
-  } else {
-    config.baseURL = BACKEND_URL; // External backend
-  }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
-  return config;
-});
-
+/* --------------------------------------------------
+   RESPONSE INTERCEPTOR
+   → Auto logout on 401
+-------------------------------------------------- */
 api.interceptors.response.use(
-  (res) => res,
-  (err) => {
-    if (err?.response?.status === 401) logoutUser();
-    return Promise.reject(err);
+  (response) => response,
+  (error) => {
+    if (error?.response?.status === 401) {
+      const { logout } = useAuthStore.getState();
+      logout();
+
+      if (typeof window !== "undefined") {
+        window.location.href = "/auth/login";
+      }
+    }
+
+    return Promise.reject(error);
   }
 );
 
 export default api;
+
