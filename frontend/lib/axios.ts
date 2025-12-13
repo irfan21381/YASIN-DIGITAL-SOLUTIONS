@@ -1,19 +1,56 @@
+// src/lib/axios.ts
 import axios from "axios";
+import { useAuthStore } from "@/lib/store";
+
+/**
+ * Single backend (Render)
+ * Backend already serves /api/*
+ * Do NOT auto-switch baseURL based on path
+ */
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL, // external backend URL
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  timeout: 15000,
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
-// Interceptor to auto-switch between external backend & Next.js API
-api.interceptors.request.use((config) => {
-  // If request starts with '/api/', use Next.js API
-  if (config.url?.startsWith("/api/")) {
-    config.baseURL = "";  // Next.js API (same server)
-  } else {
-    config.baseURL = process.env.NEXT_PUBLIC_API_URL; // external backend
+/* --------------------------------------------------
+   REQUEST INTERCEPTOR → Attach JWT
+-------------------------------------------------- */
+api.interceptors.request.use(
+  (config) => {
+    const token = useAuthStore.getState().token;
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+/* --------------------------------------------------
+   RESPONSE INTERCEPTOR → Handle auth expiry
+-------------------------------------------------- */
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error?.response?.status;
+
+    if (status === 401) {
+      // Token expired / invalid
+      useAuthStore.getState().logout();
+
+      if (typeof window !== "undefined") {
+        window.location.href = "/auth/login";
+      }
+    }
+
+    return Promise.reject(error);
   }
-
-  return config;
-});
+);
 
 export default api;
