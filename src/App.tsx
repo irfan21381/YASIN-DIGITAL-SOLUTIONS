@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 // Toastify
 import { ToastContainer } from "react-toastify";
@@ -42,7 +42,7 @@ export default function App() {
     <>
       <BrowserRouter>
         <Routes>
-          {/* Public Routes */}
+          {/* ---------------- PUBLIC ---------------- */}
           <Route element={<MainLayout />}>
             <Route path="/" element={<HomePage />} />
           </Route>
@@ -51,48 +51,71 @@ export default function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
 
-          {/* Student Routes */}
-          <Route element={<ProtectedRoute allowedRoles={["STUDENT", "PUBLIC_STUDENT"]} />}>
+          {/* ---------------- STUDENT ---------------- */}
+          <Route
+            element={
+              <ProtectedRoute allowedRoles={["STUDENT", "PUBLIC_STUDENT"]} />
+            }
+          >
             <Route element={<StudentLayout />}>
-              <Route path="/student" element={<StudentDashboard />} />
+              <Route index element={<Navigate to="/student/dashboard" />} />
+              <Route path="/student/dashboard" element={<StudentDashboard />} />
               <Route path="/student/profile" element={<Profile />} />
               <Route path="/student/internships" element={<Internships />} />
               <Route path="/student/payments" element={<Payments />} />
             </Route>
           </Route>
 
-          {/* Admin */}
+          {/* ---------------- SUPER ADMIN ---------------- */}
           <Route element={<ProtectedRoute allowedRoles={["SUPER_ADMIN"]} />}>
             <Route element={<AdminLayout />}>
-              <Route path="/admin/dashboard" element={<SuperAdminDashboard />} />
-              <Route path="/admin/payment-requests" element={<PaymentRequests />} />
+              <Route index element={<Navigate to="/admin/dashboard" />} />
+              <Route
+                path="/admin/dashboard"
+                element={<SuperAdminDashboard />}
+              />
+              <Route
+                path="/admin/payment-requests"
+                element={<PaymentRequests />}
+              />
             </Route>
           </Route>
 
-          {/* Manager */}
+          {/* ---------------- MANAGER ---------------- */}
           <Route element={<ProtectedRoute allowedRoles={["MANAGER"]} />}>
             <Route element={<ManagerLayout />}>
-              <Route path="/manager/dashboard" element={<ManagerDashboard />} />
+              <Route
+                path="/manager/dashboard"
+                element={<ManagerDashboard />}
+              />
             </Route>
           </Route>
 
-          {/* Teacher */}
+          {/* ---------------- TEACHER ---------------- */}
           <Route element={<ProtectedRoute allowedRoles={["TEACHER"]} />}>
             <Route element={<TeacherLayout />}>
-              <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
+              <Route
+                path="/teacher/dashboard"
+                element={<TeacherDashboard />}
+              />
             </Route>
           </Route>
 
-          {/* Employee */}
+          {/* ---------------- EMPLOYEE ---------------- */}
           <Route element={<ProtectedRoute allowedRoles={["EMPLOYEE"]} />}>
             <Route element={<EmployeeLayout />}>
-              <Route path="/employee/dashboard" element={<div>Employee Dashboard</div>} />
+              <Route
+                path="/employee/dashboard"
+                element={<div>Employee Dashboard</div>}
+              />
             </Route>
           </Route>
+
+          {/* ---------------- FALLBACK ---------------- */}
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </BrowserRouter>
 
-      {/* Toast Notifications */}
       <ToastContainer position="top-right" autoClose={3000} />
     </>
   );
