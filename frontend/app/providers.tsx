@@ -5,15 +5,21 @@ import { ReactNode, useState } from 'react';
 import { Toaster } from 'react-hot-toast';
 
 export function Providers({ children }: { children: ReactNode }) {
-  // Create QueryClient only once per session
   const [queryClient] = useState(
     () =>
       new QueryClient({
         defaultOptions: {
           queries: {
             refetchOnWindowFocus: false,
-            retry: 1,
-            staleTime: 1000 * 60, // cache for 1 minute
+            retry: (failureCount, error: any) => {
+              // Do not retry on auth errors
+              if (error?.response?.status === 401) return false;
+              return failureCount < 1;
+            },
+            staleTime: 1000 * 60, // 1 minute
+          },
+          mutations: {
+            retry: false,
           },
         },
       })
