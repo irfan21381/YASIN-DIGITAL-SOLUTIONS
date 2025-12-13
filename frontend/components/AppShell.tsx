@@ -21,33 +21,36 @@ const navItems = [
   { href: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 
-export default function AdminLayout({ children }: { children: ReactNode }) {
+export default function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
 
   const { user, logout } = useAuthStore();
   const [checking, setChecking] = useState(true);
 
-  // 🔐 Protect admin-only pages with loading guard
+  // 🔐 Admin-only protection
   useEffect(() => {
-    // Zustand loads user from localStorage AFTER hydration → prevent redirect flicker
+    // Wait for Zustand hydration
     if (user === undefined) return;
 
+    // Not logged in
     if (!user) {
       router.replace('/auth/login');
       return;
     }
 
-    // Must be SUPER_ADMIN only
-    if (!user.roles?.includes('SUPER_ADMIN')) {
-      router.replace('/auth/login');
+    // Support role switching (activeRole > role)
+    const currentRole = user.activeRole ?? user.role;
+
+    // Not SUPER_ADMIN
+    if (currentRole !== 'SUPER_ADMIN') {
+      router.replace('/dashboard'); // or /403
       return;
     }
 
     setChecking(false);
   }, [user, router]);
 
-  // Prevent UI flashing before auth is validated
   if (checking) {
     return (
       <div className="text-white min-h-screen flex items-center justify-center">
@@ -99,9 +102,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
         <div className="px-3 py-3 border-t border-white/10 text-xs text-gray-400">
           <div className="mb-2">
-            {user?.email}
+            {user.email}
             <div className="text-[10px] text-purple-300">
-              Role: {user?.activeRole || 'UNKNOWN'}
+              Role: {user.activeRole ?? user.role}
             </div>
           </div>
 
