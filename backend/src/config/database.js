@@ -6,11 +6,24 @@ const { drizzle } = require("drizzle-orm/node-postgres");
 
 const DATABASE_URL = process.env.DATABASE_URL;
 
-console.log("🔵 [DB] DATABASE_URL =", DATABASE_URL);
+// Never log full DB URL in production
+console.log("🔵 [DB] DATABASE_URL loaded =", !!DATABASE_URL);
 
-const pool = new Pool({ connectionString: DATABASE_URL });
+// --------------------------------------------------
+// PostgreSQL Pool (Render requires SSL)
+// --------------------------------------------------
+const pool = new Pool({
+  connectionString: DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false, // REQUIRED for Render / managed Postgres
+  },
+});
+
 const db = drizzle(pool);
 
+// --------------------------------------------------
+// Connection Test (Non-fatal)
+// --------------------------------------------------
 (async () => {
   try {
     console.log("🔵 [DB] Pool created → testing connection...");
@@ -20,7 +33,7 @@ const db = drizzle(pool);
     client.release();
   } catch (err) {
     console.error("❌ [DB] Connection error:", err.message);
-    // no process.exit() here
+    // Do NOT crash server
   }
 })();
 
