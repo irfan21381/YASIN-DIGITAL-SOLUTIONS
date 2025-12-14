@@ -1,13 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+
   images: {
     domains: ['localhost'],
   },
-  env: {
-    NEXT_PUBLIC_API_URL:
-      process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000',
-  },
-}
 
-module.exports = nextConfig
+  env: {
+    // Frontend ALWAYS talks to backend via /api
+    NEXT_PUBLIC_API_BASE: "/api",
+  },
+};
+
+module.exports = nextConfig;
