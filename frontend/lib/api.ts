@@ -1,59 +1,43 @@
 // src/lib/api.ts
-import axios from "axios";
-import { useAuthStore } from "@/lib/store";
 
-/* --------------------------------------------------
-   BACKEND URL
--------------------------------------------------- */
-const BACKEND_URL = (
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
-).replace(/\/$/, "");
+export async function apiFetch(
+  url: string,
+  options: RequestInit = {}
+) {
+  const base = process.env.NEXT_PUBLIC_API_BASE || "/api";
 
-const api = axios.create({
-  baseURL: BACKEND_URL,
-  timeout: 20000,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
+  // Ensure URL is always /api/...
+  const finalUrl = url.startsWith("/")
+    ? `${base}${url}`
+    : `${base}/${url}`;
 
-/* --------------------------------------------------
-   REQUEST INTERCEPTOR
-   → Attach JWT token
--------------------------------------------------- */
-api.interceptors.request.use(
-  (config) => {
-    const token = useAuthStore.getState().token;
+  const response = await fetch(finalUrl, {
+    ...options,
+    credentials: "include", // 🔥 REQUIRED for cookie auth
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+    },
+  });
 
-    if (token) {
-      config.headers = config.headers || {};
-      config.headers.Authorization = `Bearer ${token}`;
+  // 🔐 Auto logout on auth failure
+  if (response.status === 401) {
+    if (typeof window !== "undefined") {
+      window.location.href = "/auth/login";
     }
-
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-/* --------------------------------------------------
-   RESPONSE INTERCEPTOR
-   → Auto logout on 401
--------------------------------------------------- */
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error?.response?.status === 401) {
-      const { logout } = useAuthStore.getState();
-      logout();
-
-      if (typeof window !== "undefined") {
-        window.location.href = "/auth/login";
-      }
-    }
-
-    return Promise.reject(error);
+    throw new Error("Unauthorized");
   }
-);
 
-export default api;
+  // ❌ Handle API errors
+  if (!response.ok) {
+    let errorMessage = "Something went wrong";
+    try {
+      const data = await response.json();
+      errorMessage = data?.message || errorMessage;
+    } catch (_) {}
+    throw new Error(errorMessage);
+  }
 
+  // ✅ Return JSON
+  return response.json();
+}
