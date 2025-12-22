@@ -27,29 +27,23 @@ const navItems = [
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
-  const { user, logout, loading } = useAuthStore()
+  const { user, logout } = useAuthStore()
 
   /* ---------------- Admin Route Protection ---------------- */
   useEffect(() => {
-    if (loading) return
+    if (!user) {
+      router.replace('/auth/login')
+      return
+    }
 
-    if (!user || user.role !== 'SUPER_ADMIN') {
+    if (user.role !== 'SUPER_ADMIN') {
       router.replace('/auth/login')
     }
-  }, [user, loading, router])
+  }, [user, router])
 
   const handleLogout = () => {
     logout()
     router.replace('/auth/login')
-  }
-
-  /* ---------------- Loading State ---------------- */
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen text-white">
-        Loading...
-      </div>
-    )
   }
 
   /* ------------------------- UI ------------------------- */
@@ -118,4 +112,3 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     </div>
   )
 }
-
