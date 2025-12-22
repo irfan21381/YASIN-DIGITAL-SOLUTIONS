@@ -15,17 +15,8 @@ export default function StudentLayout({ children }: { children: ReactNode }) {
       return
     }
 
-    /**
-     * ✅ ROLE CHECK (SAFE)
-     * Works whether backend sends:
-     *  - role: "STUDENT"
-     *  - roles: ["STUDENT"]
-     */
-    const isStudent =
-      user.role === 'STUDENT' ||
-      (Array.isArray(user.roles) && user.roles.includes('STUDENT'))
-
-    if (!isStudent) {
+    // ✅ ONLY VALID CHECK (matches your User type)
+    if (user.role !== 'STUDENT') {
       router.replace('/auth/login')
     }
   }, [user, router])
