@@ -3,7 +3,6 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/store'
-import { UserRole } from '@/types/user' // ✅ IMPORT ENUM
 
 export default function ManagerGuard({
   children,
@@ -19,8 +18,17 @@ export default function ManagerGuard({
       return
     }
 
-    // ✅ ENUM SAFE CHECK
-    if (user.role !== UserRole.COLLEGE_MANAGER) {
+    /**
+     * ✅ SAFE ROLE CHECK
+     * Supports:
+     * - user.role = "COLLEGE_MANAGER"
+     * - user.roles = ["COLLEGE_MANAGER"]
+     */
+    const role =
+      (user as any).role ||
+      ((user as any).roles && (user as any).roles[0])
+
+    if (role !== 'COLLEGE_MANAGER') {
       router.replace('/auth/login')
     }
   }, [user, router])
