@@ -27,24 +27,29 @@ const navItems = [
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
-  const { user, logout } = useAuthStore()
+  const { user, logout, loading } = useAuthStore()
 
   /* ---------------- Admin Route Protection ---------------- */
   useEffect(() => {
-    if (!user) {
-      router.replace('/auth/login')
-      return
-    }
+    if (loading) return
 
-    // Only allow SUPER_ADMIN into this layout
-    if (!user.roles?.includes('SUPER_ADMIN')) {
+    if (!user || user.role !== 'SUPER_ADMIN') {
       router.replace('/auth/login')
     }
-  }, [user, router])
+  }, [user, loading, router])
 
   const handleLogout = () => {
     logout()
     router.replace('/auth/login')
+  }
+
+  /* ---------------- Loading State ---------------- */
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen text-white">
+        Loading...
+      </div>
+    )
   }
 
   /* ------------------------- UI ------------------------- */
@@ -90,7 +95,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           <div className="mb-2">
             {user?.email}
             <div className="text-[10px] text-purple-300">
-              Role: {user?.activeRole || 'SUPER_ADMIN'}
+              Role: {user?.role}
             </div>
           </div>
 
@@ -113,3 +118,4 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     </div>
   )
 }
+
