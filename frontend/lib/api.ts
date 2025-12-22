@@ -1,5 +1,3 @@
-// frontend/lib/api.ts
-
 export async function apiFetch(
   url: string,
   options: RequestInit = {}
@@ -27,14 +25,28 @@ export async function apiFetch(
   }
 
   if (!response.ok) {
-    let errorMessage = "Something went wrong";
-    try {
-      const data = await response.json();
-      errorMessage = data?.message || errorMessage;
-    } catch {}
-    throw new Error(errorMessage);
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data?.message || "API Error");
   }
 
   return response.json();
 }
 
+/* 🔥 ADD THIS */
+const api = {
+  get: (url: string) => apiFetch(url),
+  post: (url: string, body?: any) =>
+    apiFetch(url, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  put: (url: string, body?: any) =>
+    apiFetch(url, {
+      method: "PUT",
+      body: JSON.stringify(body),
+    }),
+  delete: (url: string) =>
+    apiFetch(url, { method: "DELETE" }),
+};
+
+export default api;
