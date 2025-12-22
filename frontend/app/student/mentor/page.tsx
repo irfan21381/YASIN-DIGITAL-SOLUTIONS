@@ -1,9 +1,6 @@
-
-'use client';
+'use client'
 
 export const dynamic = 'force-dynamic'
-
-
 
 import Layout from '@/components/AppShell'
 import { useQuery } from '@tanstack/react-query'
@@ -11,42 +8,45 @@ import api from '@/lib/api'
 import { Sparkles, BookOpen, Target, Lightbulb } from 'lucide-react'
 
 export default function MentorPage() {
-
-  // ------------------------------
-  // SAFE MENTOR DATA FETCH
-  // ------------------------------
+  /* ------------------------------
+     SAFE MENTOR DATA FETCH
+  ------------------------------ */
   const { data, isLoading, isError } = useQuery({
     queryKey: ['ai-mentor'],
     queryFn: async () => {
       try {
-        // ✅ FIXED API route for PostgreSQL structure
         const res = await api.get('/api/ai/mentor')
 
-        // Normalize ALL possible API formats
         const raw =
           res?.data?.data ??
           res?.data?.mentor ??
           res?.data ??
           {}
 
-        // Always return same format
         return {
-          recommendations: raw.recommendations ?? "",
+          recommendations:
+            typeof raw.recommendations === 'string'
+              ? raw.recommendations
+              : '',
           weakTopics: Array.isArray(raw.weakTopics) ? raw.weakTopics : [],
-          unitSummaries: Array.isArray(raw.unitSummaries) ? raw.unitSummaries : [],
+          unitSummaries: Array.isArray(raw.unitSummaries)
+            ? raw.unitSummaries
+            : [],
         }
-      } catch (err) {
+      } catch {
         return {
-          recommendations: "",
+          recommendations: '',
           weakTopics: [],
           unitSummaries: [],
         }
       }
-    }
+    },
   })
 
   const recommendations =
-    data?.recommendations?.trim() !== "" ? data.recommendations : "No recommendations available yet."
+    data?.recommendations?.trim()
+      ? data.recommendations
+      : 'No recommendations available yet.'
 
   const weakTopics = data?.weakTopics ?? []
   const unitSummaries = data?.unitSummaries ?? []
@@ -55,7 +55,7 @@ export default function MentorPage() {
     <Layout>
       <div className="px-4 py-6 max-w-5xl mx-auto">
 
-        {/* Header */}
+        {/* HEADER */}
         <div className="mb-10">
           <div className="flex items-center space-x-3 mb-3">
             <div className="bg-gradient-to-r from-yellow-600 to-orange-600 p-3 rounded-xl shadow-lg shadow-yellow-600/20">
@@ -63,48 +63,59 @@ export default function MentorPage() {
             </div>
             <div>
               <h1 className="text-4xl font-black text-white">AI Mentor</h1>
-              <p className="text-yellow-400">Your Personalized Learning Guide</p>
+              <p className="text-yellow-400">
+                Your Personalized Learning Guide
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Loading */}
+        {/* LOADING */}
         {isLoading && (
           <div className="bg-gradient-to-br from-gray-900 to-black rounded-2xl border border-purple-500/20 p-12 text-center">
             <Sparkles className="h-16 w-16 text-purple-400 mx-auto mb-4 opacity-50 animate-pulse" />
-            <p className="text-gray-400">Loading your personalized mentor recommendations...</p>
+            <p className="text-gray-400">
+              Loading your personalized mentor recommendations…
+            </p>
           </div>
         )}
 
-        {/* Error */}
+        {/* ERROR */}
         {isError && (
           <div className="bg-gradient-to-br from-gray-900 to-black rounded-2xl border border-red-500/20 p-12 text-center">
-            <p className="text-red-400">Unable to load mentor data. Please try again.</p>
+            <p className="text-red-400">
+              Unable to load mentor data. Please try again.
+            </p>
           </div>
         )}
 
-        {/* Data */}
+        {/* DATA */}
         {!isLoading && !isError && (
           <div className="space-y-8">
 
-            {/* Recommendations */}
+            {/* RECOMMENDATIONS */}
             <div className="bg-gradient-to-br from-gray-900 to-black rounded-2xl border border-yellow-500/20 p-6">
               <div className="flex items-center space-x-2 mb-4">
                 <Lightbulb className="h-6 w-6 text-yellow-400" />
-                <h2 className="text-2xl font-black text-white">Personalized Recommendations</h2>
+                <h2 className="text-2xl font-black text-white">
+                  Personalized Recommendations
+                </h2>
               </div>
               <p className="text-gray-300 whitespace-pre-wrap leading-relaxed">
                 {recommendations}
               </p>
             </div>
 
-            {/* Weak Topics */}
+            {/* WEAK TOPICS */}
             {weakTopics.length > 0 && (
               <div className="bg-gradient-to-br from-gray-900 to-black rounded-2xl border border-red-500/20 p-6">
                 <div className="flex items-center space-x-2 mb-4">
                   <Target className="h-6 w-6 text-red-400" />
-                  <h2 className="text-2xl font-black text-white">Weak Topics to Focus On</h2>
+                  <h2 className="text-2xl font-black text-white">
+                    Weak Topics to Focus On
+                  </h2>
                 </div>
+
                 <div className="flex flex-wrap gap-3">
                   {weakTopics.map((topic: string, idx: number) => (
                     <span
@@ -118,12 +129,14 @@ export default function MentorPage() {
               </div>
             )}
 
-            {/* Unit Summaries */}
+            {/* UNIT SUMMARIES */}
             {unitSummaries.length > 0 && (
               <div className="bg-gradient-to-br from-gray-900 to-black rounded-2xl border border-blue-500/20 p-6">
                 <div className="flex items-center space-x-2 mb-4">
                   <BookOpen className="h-6 w-6 text-blue-400" />
-                  <h2 className="text-2xl font-black text-white">Unit Summaries</h2>
+                  <h2 className="text-2xl font-black text-white">
+                    Unit Summaries
+                  </h2>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -132,24 +145,29 @@ export default function MentorPage() {
                       key={idx}
                       className="p-4 bg-black/50 rounded-lg border border-blue-500/20 hover:bg-blue-500/5 transition"
                     >
-                      <h3 className="font-bold text-white mb-1">{unit?.title ?? "Untitled Unit"}</h3>
-                      <p className="text-sm text-gray-400">Unit {unit?.unit ?? "-"}</p>
+                      <h3 className="font-bold text-white mb-1">
+                        {unit?.title ?? 'Untitled Unit'}
+                      </h3>
+                      <p className="text-sm text-gray-400">
+                        Unit {unit?.unit ?? '-'}
+                      </p>
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Empty */}
-            {!weakTopics.length && !unitSummaries.length && recommendations === "No recommendations available yet." && (
-              <div className="bg-black/40 rounded-xl border border-gray-700 p-6 text-gray-400 text-center">
-                No mentor data available yet. Complete activities to generate insights.
-              </div>
-            )}
-
+            {/* EMPTY STATE */}
+            {!weakTopics.length &&
+              !unitSummaries.length &&
+              recommendations === 'No recommendations available yet.' && (
+                <div className="bg-black/40 rounded-xl border border-gray-700 p-6 text-gray-400 text-center">
+                  No mentor data available yet. Complete activities to generate
+                  insights.
+                </div>
+              )}
           </div>
         )}
-
       </div>
     </Layout>
   )
