@@ -6,33 +6,29 @@ import { useAuthStore } from '@/lib/store'
 
 export default function StudentLayout({ children }: { children: ReactNode }) {
   const router = useRouter()
-  const { user, initialized, finishInit } = useAuthStore()
+  const { user } = useAuthStore()
 
-  // Restore localStorage user only once
   useEffect(() => {
-    if (!initialized) finishInit()
-  }, [initialized, finishInit])
+    // Not logged in
+    if (!user) {
+      router.replace('/auth/login')
+      return
+    }
 
-  // Wait until Zustand hydrates
-  if (!initialized) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-white">
-        Checking authentication…
-      </div>
-    )
-  }
+    /**
+     * ✅ ROLE CHECK (SAFE)
+     * Works whether backend sends:
+     *  - role: "STUDENT"
+     *  - roles: ["STUDENT"]
+     */
+    const isStudent =
+      user.role === 'STUDENT' ||
+      (Array.isArray(user.roles) && user.roles.includes('STUDENT'))
 
-  // Not logged in
-  if (!user) {
-    router.replace('/auth/login')
-    return null
-  }
-
-  // Logged in but not a student
-  if (user.activeRole !== 'STUDENT') {
-    router.replace('/auth/login')
-    return null
-  }
+    if (!isStudent) {
+      router.replace('/auth/login')
+    }
+  }, [user, router])
 
   return <>{children}</>
 }
