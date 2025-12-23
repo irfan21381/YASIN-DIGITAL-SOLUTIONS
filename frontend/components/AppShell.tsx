@@ -24,26 +24,28 @@ const navItems = [
 export default function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
-  const { user, logout } = useAuthStore()
+  const { user, logout, initialized, finishInit } = useAuthStore()
   const [checking, setChecking] = useState(true)
 
-  // 🔐 SUPER_ADMIN protection
   useEffect(() => {
-    if (user === undefined) return // wait for Zustand hydration
+    finishInit()
+  }, [finishInit])
+
+  useEffect(() => {
+    if (!initialized) return
 
     if (!user) {
       router.replace('/auth/login')
       return
     }
 
-    // ✅ ONLY user.role (NO activeRole)
     if (user.role !== 'SUPER_ADMIN') {
       router.replace('/dashboard')
       return
     }
 
     setChecking(false)
-  }, [user, router])
+  }, [user, initialized, router])
 
   if (checking) {
     return (
@@ -60,35 +62,31 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen flex bg-black text-white">
-      {/* Sidebar */}
+
       <aside className="w-64 bg-gradient-to-b from-gray-950 to-black border-r border-white/10 flex flex-col">
         <div className="px-4 py-4 border-b border-white/10">
           <div className="text-lg font-black">YDS EduAI</div>
-          <div className="text-[10px] text-purple-300 uppercase tracking-wide">
+          <div className="text-[10px] text-purple-300 uppercase">
             Super Admin Panel
           </div>
         </div>
 
         <nav className="flex-1 px-2 py-4 space-y-1">
-          {navItems.map(({ href, label, icon: Icon }) => {
-            const active = pathname.startsWith(href)
-
-            return (
-              <Link
-                key={href}
-                href={href}
-                className={`flex items-center px-3 py-2 text-sm rounded-xl
-                  ${
-                    active
-                      ? 'bg-purple-600/30 text-white border border-purple-500/70'
-                      : 'text-gray-300 hover:bg-white/5'
-                  }`}
-              >
-                <Icon className="h-4 w-4 mr-2" />
-                {label}
-              </Link>
-            )
-          })}
+          {navItems.map(({ href, label, icon: Icon }) => (
+            <Link
+              key={href}
+              href={href}
+              className={`flex items-center px-3 py-2 rounded-xl text-sm
+                ${
+                  pathname.startsWith(href)
+                    ? 'bg-purple-600/30 border border-purple-500/70'
+                    : 'text-gray-300 hover:bg-white/5'
+                }`}
+            >
+              <Icon className="h-4 w-4 mr-2" />
+              {label}
+            </Link>
+          ))}
         </nav>
 
         <div className="px-3 py-3 border-t border-white/10 text-xs text-gray-400">
@@ -102,14 +100,13 @@ export default function AppShell({ children }: { children: ReactNode }) {
           <button
             onClick={handleLogout}
             className="flex items-center w-full justify-center px-3 py-2 rounded-lg
-                       bg-red-500/20 text-red-100 text-xs hover:bg-red-500/30"
+                       bg-red-500/20 text-red-100 hover:bg-red-500/30"
           >
             <LogOut className="h-3 w-3 mr-2" /> Logout
           </button>
         </div>
       </aside>
 
-      {/* Main */}
       <main className="flex-1">{children}</main>
     </div>
   )
