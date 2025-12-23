@@ -17,7 +17,7 @@ const testEndpoints = async () => {
     {
       name: "Send OTP",
       method: "POST",
-      url: `${API}/auth/send-otp`,
+      url: `${API}//api/auth/send-otp`,
       data: { email: "test@example.com" },
       auth: false,
     },
