@@ -30,12 +30,17 @@ export default function LoginPage() {
   /* ---------------- SEND OTP ---------------- */
   const sendOtp = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
 
+    if (!email.trim()) {
+      toast.error('Email is required')
+      return
+    }
+
+    setLoading(true)
     try {
-      // ✅ FIXED (NO /api)
+      // ✅ CORRECT (NO /api)
       await api.post('/auth/send-otp', { email, role })
-      toast.success('OTP sent')
+      toast.success('OTP sent to your email')
       setStep('otp')
     } catch (err: any) {
       toast.error(err.message || 'Failed to send OTP')
@@ -47,16 +52,23 @@ export default function LoginPage() {
   /* ---------------- VERIFY OTP ---------------- */
   const verifyOtp = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
 
+    if (otp.length !== 6) {
+      toast.error('OTP must be 6 digits')
+      return
+    }
+
+    setLoading(true)
     try {
-      // ✅ FIXED (NO /api)
+      // ✅ CORRECT (NO /api)
       const res = await api.post('/auth/verify-otp', { email, otp })
 
-      const user = res.data?.user || res.user
-      const token = res.data?.token || res.token
+      const user = res?.user || res?.data?.user
+      const token = res?.token || res?.data?.token
 
-      if (!user || !token) throw new Error('Invalid response')
+      if (!user || !token) {
+        throw new Error('Invalid login response')
+      }
 
       setAuth(user, token)
       toast.success('Login successful')
@@ -72,22 +84,30 @@ export default function LoginPage() {
   /* ---------------- ADMIN PASSWORD LOGIN ---------------- */
   const passwordLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
 
+    if (!email.trim() || !password.trim()) {
+      toast.error('Email and password required')
+      return
+    }
+
+    setLoading(true)
     try {
-      // ✅ FIXED (NO /api)
+      // ✅ CORRECT (NO /api)
       const res = await api.post('/auth/login-password', {
         email,
         password,
       })
 
-      const user = res.data?.user || res.user
-      const token = res.data?.token || res.token
+      const user = res?.user || res?.data?.user
+      const token = res?.token || res?.data?.token
 
-      if (!user || !token) throw new Error('Invalid response')
+      if (!user || !token) {
+        throw new Error('Invalid login response')
+      }
 
       setAuth(user, token)
       toast.success('Admin login successful')
+
       router.push('/admin/dashboard')
     } catch (err: any) {
       toast.error(err.message || 'Invalid credentials')
@@ -113,6 +133,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-black text-white">
       <div className="w-full max-w-md space-y-6">
 
+        {/* ROLE SELECTION */}
         {step === 'role' && (
           <>
             <select
@@ -130,20 +151,23 @@ export default function LoginPage() {
               onClick={() =>
                 role === 'SUPER_ADMIN' ? setStep('password') : setStep('email')
               }
-              className="w-full py-3 bg-purple-600 rounded-xl"
+              className="w-full py-3 bg-purple-600 rounded-xl font-bold"
             >
               Continue
             </button>
           </>
         )}
 
+        {/* EMAIL */}
         {step === 'email' && (
           <form onSubmit={sendOtp}>
             <input
+              type="email"
               className="w-full p-3 bg-black border rounded-xl"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Email"
+              required
             />
             <button className="w-full mt-4 py-3 bg-purple-600 rounded-xl">
               {button('Send OTP')}
@@ -151,6 +175,7 @@ export default function LoginPage() {
           </form>
         )}
 
+        {/* OTP */}
         {step === 'otp' && (
           <form onSubmit={verifyOtp}>
             <input
@@ -158,6 +183,7 @@ export default function LoginPage() {
               value={otp}
               onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
               maxLength={6}
+              placeholder="Enter OTP"
             />
             <button className="w-full mt-4 py-3 bg-purple-600 rounded-xl">
               {button('Verify OTP')}
@@ -165,13 +191,16 @@ export default function LoginPage() {
           </form>
         )}
 
+        {/* PASSWORD */}
         {step === 'password' && (
           <form onSubmit={passwordLogin}>
             <input
+              type="email"
               className="w-full p-3 bg-black border rounded-xl mb-3"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Admin Email"
+              required
             />
             <input
               type="password"
@@ -179,6 +208,7 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Password"
+              required
             />
             <button className="w-full mt-4 py-3 bg-purple-600 rounded-xl">
               {button('Login')}
