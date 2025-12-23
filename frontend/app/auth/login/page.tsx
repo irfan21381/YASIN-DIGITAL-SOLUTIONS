@@ -38,7 +38,7 @@ export default function LoginPage() {
 
     setLoading(true)
     try {
-      // ✅ CORRECT (NO /api)
+      // ✅ BACKEND MATCHING ROUTE
       await api.post('/api/auth/send-otp', { email, role })
       toast.success('OTP sent to your email')
       setStep('otp')
@@ -60,8 +60,8 @@ export default function LoginPage() {
 
     setLoading(true)
     try {
-      // ✅ CORRECT (NO /api)
-      const res = await api.post('/auth/verify-otp', { email, otp })
+      // ✅ BACKEND MATCHING ROUTE
+      const res = await api.post('/api/auth/verify-otp', { email, otp })
 
       const user = res?.user || res?.data?.user
       const token = res?.token || res?.data?.token
@@ -92,8 +92,8 @@ export default function LoginPage() {
 
     setLoading(true)
     try {
-      // ✅ CORRECT (NO /api)
-      const res = await api.post('/auth/login-password', {
+      // ✅ BACKEND MATCHING ROUTE
+      const res = await api.post('/api/auth/login-password', {
         email,
         password,
       })
@@ -149,7 +149,9 @@ export default function LoginPage() {
 
             <button
               onClick={() =>
-                role === 'SUPER_ADMIN' ? setStep('password') : setStep('email')
+                role === 'SUPER_ADMIN'
+                  ? setStep('password')
+                  : setStep('email')
               }
               className="w-full py-3 bg-purple-600 rounded-xl font-bold"
             >
