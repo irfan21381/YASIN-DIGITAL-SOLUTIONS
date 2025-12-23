@@ -33,7 +33,8 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      await api.post('/api/auth/send-otp', { email, role })
+      // ✅ FIXED (NO /api)
+      await api.post('/auth/send-otp', { email, role })
       toast.success('OTP sent')
       setStep('otp')
     } catch (err: any) {
@@ -49,7 +50,9 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      const res = await api.post('/api/auth/verify-otp', { email, otp })
+      // ✅ FIXED (NO /api)
+      const res = await api.post('/auth/verify-otp', { email, otp })
+
       const user = res.data?.user || res.user
       const token = res.data?.token || res.token
 
@@ -72,7 +75,8 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      const res = await api.post('/api/auth/login-password', {
+      // ✅ FIXED (NO /api)
+      const res = await api.post('/auth/login-password', {
         email,
         password,
       })
