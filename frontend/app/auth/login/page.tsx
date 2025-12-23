@@ -39,7 +39,7 @@ export default function LoginPage() {
     setLoading(true)
     try {
       // ✅ CORRECT (NO /api)
-      await api.post('/auth/send-otp', { email, role })
+      await api.post('/api/auth/send-otp', { email, role })
       toast.success('OTP sent to your email')
       setStep('otp')
     } catch (err: any) {
