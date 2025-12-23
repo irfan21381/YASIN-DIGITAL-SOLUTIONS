@@ -1,5 +1,5 @@
 // ------------------------------------------------------------
-// server.js — FINAL (PostgreSQL + Prisma | Render-ready)
+// server.js — FINAL WORKING VERSION (Frontend + Backend CONNECT)
 // ------------------------------------------------------------
 
 require("dotenv").config();
@@ -21,10 +21,6 @@ const compression = require("compression");
 const morgan = require("morgan");
 const rateLimit = require("express-rate-limit");
 
-const corsMiddleware = require("./src/config/cors");
-const errorHandler = require("./src/middlewares/error.middleware");
-const logger = require("./src/config/logger");
-
 // ------------------------------------------------------------
 // PRISMA
 // ------------------------------------------------------------
@@ -34,32 +30,46 @@ const prisma = new PrismaClient();
 const app = express();
 
 // ------------------------------------------------------------
-// GLOBAL MIDDLEWARE
+// BASIC MIDDLEWARE
 // ------------------------------------------------------------
-app.use(corsMiddleware);
-app.options("*", corsMiddleware);
-
 app.use(helmet());
 app.use(compression());
-
-app.use(
-  morgan(":method :url :status :res[content-length] - :response-time ms", {
-    stream: { write: (msg) => logger.http(msg.trim()) },
-  })
-);
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
-// Fix sendBeacon JSON
+// ------------------------------------------------------------
+// ✅ CORS + PREFLIGHT (MOST IMPORTANT FIX)
+// ------------------------------------------------------------
 app.use((req, res, next) => {
-  if (req.is("text/plain") && typeof req.body === "string") {
-    try {
-      req.body = JSON.parse(req.body);
-    } catch {}
+  res.header(
+    "Access-Control-Allow-Origin",
+    "https://yasin-digital-solutions-lhpb.vercel.app"
+  );
+  res.header(
+    "Access-Control-Allow-Methods",
+    "GET,POST,PUT,DELETE,OPTIONS"
+  );
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization"
+  );
+  res.header("Access-Control-Allow-Credentials", "true");
+
+  // 🔥 Handle browser preflight request
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
   }
+
   next();
 });
+
+// ------------------------------------------------------------
+// LOGGING
+// ------------------------------------------------------------
+app.use(
+  morgan(":method :url :status :res[content-length] - :response-time ms")
+);
 
 // ------------------------------------------------------------
 // RATE LIMITING
@@ -80,7 +90,10 @@ app.get("/", (req, res) => {
   res.send("🚀 YDS EDU-AI Backend is running");
 });
 
+// 🔐 AUTH
 app.use("/api/auth", require("./src/routes/auth.routes"));
+
+// OTHER MODULES
 app.use("/api/users", require("./src/routes/user.routes"));
 app.use("/api/admin", require("./src/routes/admin.routes"));
 app.use("/api/colleges", require("./src/routes/college.routes"));
@@ -105,21 +118,27 @@ app.get("/health", async (req, res) => {
     res.json({
       status: "OK",
       database: "connected",
-      timestamp: new Date().toISOString(),
+      time: new Date().toISOString(),
     });
-  } catch {
+  } catch (err) {
     res.status(503).json({
       status: "ERROR",
       database: "disconnected",
-      timestamp: new Date().toISOString(),
+      time: new Date().toISOString(),
     });
   }
 });
 
 // ------------------------------------------------------------
-// ERROR HANDLER (LAST)
+// GLOBAL ERROR HANDLER
 // ------------------------------------------------------------
-app.use(errorHandler);
+app.use((err, req, res, next) => {
+  console.error("❌ ERROR:", err);
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || "Internal Server Error",
+  });
+});
 
 // ------------------------------------------------------------
 // START SERVER
@@ -128,13 +147,12 @@ const PORT = process.env.PORT || 10000;
 
 const server = app.listen(PORT, async () => {
   console.log(`🟩 Server running on port ${PORT}`);
-  logger.info(`🚀 YDS EDU-AI Backend live on port ${PORT}`);
 
   try {
     await prisma.$queryRaw`SELECT 1`;
-    console.log("🟩 DB connection verified");
+    console.log("🟩 Database connected");
   } catch {
-    console.warn("⚠️ DB ping failed (non-fatal)");
+    console.warn("⚠️ Database not reachable");
   }
 });
 
@@ -142,7 +160,7 @@ const server = app.listen(PORT, async () => {
 // GRACEFUL SHUTDOWN
 // ------------------------------------------------------------
 process.on("SIGTERM", async () => {
-  console.log("🛑 SIGTERM received. Shutting down...");
+  console.log("🛑 Shutting down server...");
   await prisma.$disconnect();
   server.close(() => process.exit(0));
 });
