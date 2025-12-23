@@ -1,76 +1,27 @@
-// frontend/lib/api.ts
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "/api";
 
-type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
-
-interface ApiOptions {
-  method?: HttpMethod;
-  body?: any;
-  headers?: HeadersInit;
-}
-
-async function apiFetch(
-  url: string,
-  options: ApiOptions = {}
-) {
-  const base = process.env.NEXT_PUBLIC_API_BASE || "/api";
-
-  // Ensure /api prefix
-  const finalUrl = url.startsWith("/")
-    ? `${base}${url}`
-    : `${base}/${url}`;
-
-  const response = await fetch(finalUrl, {
-    method: options.method || "GET",
-    credentials: "include", // ✅ cookie auth support
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers || {}),
-    },
-    body: options.body ? JSON.stringify(options.body) : undefined,
+async function request(method: string, url: string, body?: any) {
+  const res = await fetch(`${API_BASE}${url}`, {
+    method,
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: body ? JSON.stringify(body) : undefined,
   });
 
-  // 🔐 Auto logout on auth failure
-  if (response.status === 401 && typeof window !== "undefined") {
-    window.location.href = "/auth/login";
-    throw new Error("Unauthorized");
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || "Request failed");
   }
 
-  // ❌ Handle API errors
-  if (!response.ok) {
-    let message = "Something went wrong";
-    try {
-      const data = await response.json();
-      message = data?.message || message;
-    } catch (_) {}
-    throw new Error(message);
-  }
-
-  // ✅ Safe JSON parse
-  try {
-    return await response.json();
-  } catch {
-    return null;
-  }
+  return res.json();
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                API CLIENT                                  */
-/* -------------------------------------------------------------------------- */
-
 const api = {
-  get: (url: string) => apiFetch(url),
-
-  post: (url: string, body?: any) =>
-    apiFetch(url, { method: "POST", body }),
-
-  put: (url: string, body?: any) =>
-    apiFetch(url, { method: "PUT", body }),
-
-  patch: (url: string, body?: any) =>
-    apiFetch(url, { method: "PATCH", body }),
-
-  delete: (url: string) =>
-    apiFetch(url, { method: "DELETE" }),
+  get: (url: string) => request("GET", url),
+  post: (url: string, body?: any) => request("POST", url, body),
+  put: (url: string, body?: any) => request("PUT", url, body),
+  patch: (url: string, body?: any) => request("PATCH", url),
+  delete: (url: string) => request("DELETE", url),
 };
 
 export default api;
