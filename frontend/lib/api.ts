@@ -1,18 +1,27 @@
 const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE ||
-  'https://yasin-digital-solutions.onrender.com'
+  process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:5000'
 
-async function request(method: string, url: string, body?: any) {
+async function request(
+  method: string,
+  url: string,
+  body?: any
+) {
   const res = await fetch(`${API_BASE}${url}`, {
     method,
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+    },
     credentials: 'include',
     body: body ? JSON.stringify(body) : undefined,
   })
 
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}))
-    throw new Error(err.message || 'Request failed')
+    let message = 'Request failed'
+    try {
+      const err = await res.json()
+      message = err.message || message
+    } catch {}
+    throw new Error(message)
   }
 
   return res.json()
