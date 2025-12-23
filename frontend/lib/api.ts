@@ -1,4 +1,6 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "/api";
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:5000";
+
 
 async function request(method: string, url: string, body?: any) {
   const res = await fetch(`${API_BASE}${url}`, {
